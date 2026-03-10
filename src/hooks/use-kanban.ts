@@ -42,7 +42,8 @@ export function useKanban() {
     description: string, 
     subtasks: string[] = [], 
     priority: Priority = 'Baixa',
-    tags: string[] = []
+    tags: string[] = [],
+    attachmentImage?: string
   ) => {
     try {
       const newTask = {
@@ -51,6 +52,7 @@ export function useKanban() {
         columnId: 'todo' as ColumnId,
         priority,
         tags,
+        attachmentImage: attachmentImage || null,
         createdAt: Date.now(),
         subtasks: subtasks.map(s => ({
           id: crypto.randomUUID(),

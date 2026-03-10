@@ -10,7 +10,7 @@ import {
   Trash2, 
   Edit3, 
   ArrowRightLeft,
-  Clock,
+  Image as ImageIcon,
   Tag
 } from 'lucide-react';
 import {
@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface TaskCardProps {
   task: Task;
@@ -32,36 +33,51 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onDelete, onEdit, onMove, onToggleSubtask }: TaskCardProps) {
-  const completedSubtasks = task.subtasks.filter(st => st.completed).length;
-  const totalSubtasks = task.subtasks.length;
+  const completedSubtasks = task.subtasks?.filter(st => st.completed).length || 0;
+  const totalSubtasks = task.subtasks?.length || 0;
   const progress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
-  const priorityColors = {
-    'Baixa': 'bg-green-100 text-green-700 border-green-200',
-    'Média': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    'Alta': 'bg-red-100 text-red-700 border-red-200'
+  const priorityStyles = {
+    'Baixa': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    'Média': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    'Alta': 'bg-red-500/10 text-red-400 border-red-500/20'
+  };
+
+  const priorityBorder = {
+    'Baixa': 'priority-low',
+    'Média': 'priority-medium',
+    'Alta': 'priority-high'
   };
 
   return (
-    <Card className="group relative border-none shadow-sm hover:shadow-md transition-all duration-200 bg-card overflow-hidden task-card-enter">
-      <div className={cn(
-        "absolute top-0 left-0 w-1 h-full",
-        task.columnId === 'done' ? "bg-accent" : "bg-primary/20"
-      )} />
+    <Card className={cn(
+      "group relative border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-card/60 backdrop-blur-sm overflow-hidden",
+      priorityBorder[task.priority]
+    )}>
+      {task.attachmentImage && (
+        <div className="relative w-full h-32 overflow-hidden border-b border-border/50">
+          <Image 
+            src={task.attachmentImage} 
+            alt={task.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        </div>
+      )}
       
       <CardHeader className="p-4 pb-2 space-y-0 flex flex-row items-start justify-between">
-        <div className="space-y-1.5 flex-1">
+        <div className="space-y-2 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-bold uppercase", priorityColors[task.priority])}>
+            <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-black uppercase tracking-tighter", priorityStyles[task.priority])}>
               {task.priority}
             </Badge>
             {task.tags?.map(tag => (
-              <Badge key={tag} variant="secondary" className="text-[9px] px-1 py-0 h-4 bg-muted/50 text-muted-foreground">
-                #{tag}
+              <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-none font-bold">
+                {tag}
               </Badge>
             ))}
           </div>
-          <CardTitle className="text-sm font-semibold leading-tight group-hover:text-primary transition-colors">
+          <CardTitle className="text-sm font-bold leading-tight group-hover:text-primary transition-colors">
             {task.title}
           </CardTitle>
         </div>
@@ -72,10 +88,10 @@ export function TaskCard({ task, onDelete, onEdit, onMove, onToggleSubtask }: Ta
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 bg-card border-border">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => onEdit(task)}>
-              <Edit3 className="mr-2 h-4 w-4" /> Editar Tarefa
+              <Edit3 className="mr-2 h-4 w-4" /> Editar
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
@@ -91,54 +107,59 @@ export function TaskCard({ task, onDelete, onEdit, onMove, onToggleSubtask }: Ta
               onClick={() => onDelete(task.id)}
               className="text-destructive focus:text-destructive"
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Excluir Tarefa
+              <Trash2 className="mr-2 h-4 w-4" /> Excluir
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
 
-      <CardContent className="p-4 pt-0 space-y-3">
+      <CardContent className="p-4 pt-0 space-y-4">
         {task.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
+          <p className="text-xs text-muted-foreground line-clamp-2 font-medium">
             {task.description}
           </p>
         )}
 
         {totalSubtasks > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground">
-              <span>Subtarefas</span>
+          <div className="space-y-2 pt-2 border-t border-border/30">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+              <span>Progresso</span>
               <span>{completedSubtasks}/{totalSubtasks}</span>
             </div>
-            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
               <div 
                 className={cn(
-                  "h-full transition-all duration-500",
-                  progress === 100 ? "bg-accent" : "bg-primary"
+                  "h-full transition-all duration-700 ease-in-out",
+                  progress === 100 ? "bg-green-500" : "bg-primary"
                 )}
                 style={{ width: `${progress}%` }} 
               />
             </div>
-            <div className="space-y-1 pt-1">
-              {task.subtasks.map(st => (
+            <div className="space-y-1.5 pt-1">
+              {task.subtasks.slice(0, 3).map(st => (
                 <div key={st.id} className="flex items-center gap-2">
                   <Checkbox 
                     id={st.id} 
                     checked={st.completed}
                     onCheckedChange={() => onToggleSubtask(task.id, st.id)}
-                    className="w-3 h-3"
+                    className="w-3.5 h-3.5 border-primary/40 data-[state=checked]:bg-primary"
                   />
                   <label 
                     htmlFor={st.id}
                     className={cn(
-                      "text-[11px] cursor-pointer transition-colors",
-                      st.completed ? "text-muted-foreground line-through" : "text-foreground"
+                      "text-[10px] font-medium cursor-pointer transition-colors",
+                      st.completed ? "text-muted-foreground/50 line-through" : "text-foreground/80"
                     )}
                   >
                     {st.title}
                   </label>
                 </div>
               ))}
+              {totalSubtasks > 3 && (
+                <p className="text-[9px] text-muted-foreground text-center font-bold">
+                  + {totalSubtasks - 3} mais subtarefas
+                </p>
+              )}
             </div>
           </div>
         )}

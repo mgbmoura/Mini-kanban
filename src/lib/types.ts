@@ -1,4 +1,4 @@
-export type ColumnId = 'todo' | 'in-progress' | 'done';
+export type ColumnId = 'todo' | 'doing' | 'done';
 export type Priority = 'Baixa' | 'Média' | 'Alta';
 
 export interface SubTask {
@@ -17,6 +17,7 @@ export interface Task {
   attachmentImage?: string;
   createdAt: number;
   subtasks: SubTask[];
+  userId?: string;
 }
 
 export interface Column {
@@ -25,7 +26,7 @@ export interface Column {
 }
 
 export const COLUMNS: Column[] = [
-  { id: 'todo', title: 'A Fazer' },
-  { id: 'in-progress', title: 'Em Andamento' },
-  { id: 'done', title: 'Concluído' },
+  { id: 'todo', title: 'To Do' },
+  { id: 'doing', title: 'In Progress' },
+  { id: 'done', title: 'Done' },
 ];
