@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useKanban } from '@/hooks/use-kanban';
-import { COLUMNS, Task, ColumnId } from '@/lib/types';
+import { COLUMNS, Task, Priority } from '@/lib/types';
 import { TaskCard } from './TaskCard';
 import { TaskDialog } from './TaskDialog';
 import { Button } from '@/components/ui/button';
@@ -33,18 +33,20 @@ export function KanbanBoard() {
     setDialogOpen(true);
   };
 
-  const handleSaveTask = (title: string, description: string, subtasks: string[]) => {
+  const handleSaveTask = (title: string, description: string, subtasks: string[], priority: Priority, tags: string[]) => {
     if (editingTask) {
       updateTask(editingTask.id, { 
         title, 
         description, 
+        priority,
+        tags,
         subtasks: subtasks.map(s => {
           const existing = editingTask.subtasks.find(est => est.title === s);
           return existing || { id: crypto.randomUUID(), title: s, completed: false };
         })
       });
     } else {
-      addTask(title, description, subtasks);
+      addTask(title, description, subtasks, priority, tags);
     }
   };
 
@@ -52,7 +54,7 @@ export function KanbanBoard() {
     <div className="h-[60vh] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-sm font-medium text-muted-foreground">Loading your workspace...</p>
+        <p className="text-sm font-medium text-muted-foreground">Carregando seu quadro...</p>
       </div>
     </div>
   );
@@ -63,12 +65,12 @@ export function KanbanBoard() {
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2 text-primary">
             <KanbanIcon className="w-8 h-8" />
-            KanFlow
+            Mini Kanban
           </h1>
-          <p className="text-sm text-muted-foreground font-medium">Manage your projects with ease and focus.</p>
+          <p className="text-sm text-muted-foreground font-medium">Gestão simplificada de tarefas.</p>
         </div>
         <Button onClick={handleAddNew} className="bg-primary hover:bg-primary/90 shadow-sm gap-2">
-          <Plus className="w-4 h-4" /> New Task
+          <Plus className="w-4 h-4" /> Nova Tarefa
         </Button>
       </header>
 
@@ -104,7 +106,7 @@ export function KanbanBoard() {
                   {columnTasks.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-xl bg-muted/5">
                       <LayoutGrid className="w-8 h-8 text-muted mb-2 opacity-40" />
-                      <p className="text-xs text-muted-foreground text-center">No tasks here yet.</p>
+                      <p className="text-xs text-muted-foreground text-center">Nenhuma tarefa aqui.</p>
                     </div>
                   )}
                 </div>

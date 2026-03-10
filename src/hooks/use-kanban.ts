@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -11,10 +10,9 @@ import {
   doc, 
   onSnapshot, 
   query, 
-  orderBy,
-  Timestamp 
+  orderBy 
 } from 'firebase/firestore';
-import { Task, ColumnId, SubTask } from '@/lib/types';
+import { Task, ColumnId, Priority } from '@/lib/types';
 
 export function useKanban() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -39,12 +37,20 @@ export function useKanban() {
     return () => unsubscribe();
   }, []);
 
-  const addTask = async (title: string, description: string, subtasks: string[] = []) => {
+  const addTask = async (
+    title: string, 
+    description: string, 
+    subtasks: string[] = [], 
+    priority: Priority = 'Baixa',
+    tags: string[] = []
+  ) => {
     try {
       const newTask = {
         title,
         description,
         columnId: 'todo' as ColumnId,
+        priority,
+        tags,
         createdAt: Date.now(),
         subtasks: subtasks.map(s => ({
           id: crypto.randomUUID(),

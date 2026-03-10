@@ -10,8 +10,8 @@ import {
   Trash2, 
   Edit3, 
   ArrowRightLeft,
-  CheckCircle2,
-  Clock
+  Clock,
+  Tag
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -36,25 +36,34 @@ export function TaskCard({ task, onDelete, onEdit, onMove, onToggleSubtask }: Ta
   const totalSubtasks = task.subtasks.length;
   const progress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
+  const priorityColors = {
+    'Baixa': 'bg-green-100 text-green-700 border-green-200',
+    'Média': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    'Alta': 'bg-red-100 text-red-700 border-red-200'
+  };
+
   return (
     <Card className="group relative border-none shadow-sm hover:shadow-md transition-all duration-200 bg-card overflow-hidden task-card-enter">
-      {task.columnId === 'done' && (
-        <div className="absolute top-0 left-0 w-1 h-full bg-accent" />
-      )}
+      <div className={cn(
+        "absolute top-0 left-0 w-1 h-full",
+        task.columnId === 'done' ? "bg-accent" : "bg-primary/20"
+      )} />
       
       <CardHeader className="p-4 pb-2 space-y-0 flex flex-row items-start justify-between">
-        <div className="space-y-1">
+        <div className="space-y-1.5 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-bold uppercase", priorityColors[task.priority])}>
+              {task.priority}
+            </Badge>
+            {task.tags?.map(tag => (
+              <Badge key={tag} variant="secondary" className="text-[9px] px-1 py-0 h-4 bg-muted/50 text-muted-foreground">
+                #{tag}
+              </Badge>
+            ))}
+          </div>
           <CardTitle className="text-sm font-semibold leading-tight group-hover:text-primary transition-colors">
             {task.title}
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-medium border-muted text-muted-foreground uppercase tracking-wider">
-              {task.id.slice(0, 4)}
-            </Badge>
-            {task.columnId === 'in-progress' && (
-              <Clock className="w-3 h-3 text-primary animate-pulse" />
-            )}
-          </div>
         </div>
 
         <DropdownMenu>
@@ -64,13 +73,13 @@ export function TaskCard({ task, onDelete, onEdit, onMove, onToggleSubtask }: Ta
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => onEdit(task)}>
-              <Edit3 className="mr-2 h-4 w-4" /> Edit Task
+              <Edit3 className="mr-2 h-4 w-4" /> Editar Tarefa
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>Move to</DropdownMenuLabel>
+            <DropdownMenuLabel>Mover para</DropdownMenuLabel>
             {COLUMNS.filter(c => c.id !== task.columnId).map(col => (
               <DropdownMenuItem key={col.id} onClick={() => onMove(task.id, col.id)}>
                 <ArrowRightLeft className="mr-2 h-4 w-4" /> {col.title}
@@ -82,7 +91,7 @@ export function TaskCard({ task, onDelete, onEdit, onMove, onToggleSubtask }: Ta
               onClick={() => onDelete(task.id)}
               className="text-destructive focus:text-destructive"
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete Task
+              <Trash2 className="mr-2 h-4 w-4" /> Excluir Tarefa
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -98,7 +107,7 @@ export function TaskCard({ task, onDelete, onEdit, onMove, onToggleSubtask }: Ta
         {totalSubtasks > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground">
-              <span>Subtasks</span>
+              <span>Subtarefas</span>
               <span>{completedSubtasks}/{totalSubtasks}</span>
             </div>
             <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
