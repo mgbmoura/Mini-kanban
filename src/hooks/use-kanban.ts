@@ -1,6 +1,19 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  onSnapshot, 
+  query, 
+  orderBy,
+  Timestamp 
+} from 'firebase/firestore';
 import { Task, ColumnId, SubTask } from '@/lib/types';
 
 export function useKanban() {
@@ -8,61 +21,73 @@ export function useKanban() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('kanflow_tasks');
-    if (saved) {
-      try {
-        setTasks(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load tasks', e);
-      }
-    }
-    setIsLoaded(true);
+    const tasksQuery = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
+      const fetchedTasks = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Task[];
+      
+      setTasks(fetchedTasks);
+      setIsLoaded(true);
+    }, (error) => {
+      console.error("Erro ao carregar tarefas:", error);
+      setIsLoaded(true);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('kanflow_tasks', JSON.stringify(tasks));
+  const addTask = async (title: string, description: string, subtasks: string[] = []) => {
+    try {
+      const newTask = {
+        title,
+        description,
+        columnId: 'todo' as ColumnId,
+        createdAt: Date.now(),
+        subtasks: subtasks.map(s => ({
+          id: crypto.randomUUID(),
+          title: s,
+          completed: false
+        }))
+      };
+      await addDoc(collection(db, 'tasks'), newTask);
+    } catch (e) {
+      console.error("Erro ao adicionar tarefa:", e);
     }
-  }, [tasks, isLoaded]);
-
-  const addTask = (title: string, description: string, subtasks: string[] = []) => {
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      columnId: 'todo',
-      createdAt: Date.now(),
-      subtasks: subtasks.map(s => ({
-        id: crypto.randomUUID(),
-        title: s,
-        completed: false
-      }))
-    };
-    setTasks(prev => [newTask, ...prev]);
   };
 
-  const updateTask = (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+  const updateTask = async (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>) => {
+    try {
+      const taskRef = doc(db, 'tasks', id);
+      await updateDoc(taskRef, updates);
+    } catch (e) {
+      console.error("Erro ao atualizar tarefa:", e);
+    }
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
+  const deleteTask = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'tasks', id));
+    } catch (e) {
+      console.error("Erro ao deletar tarefa:", e);
+    }
   };
 
-  const moveTask = (id: string, columnId: ColumnId) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, columnId } : t));
+  const moveTask = async (id: string, columnId: ColumnId) => {
+    await updateTask(id, { columnId });
   };
 
-  const toggleSubtask = (taskId: string, subtaskId: string) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === taskId) {
-        return {
-          ...t,
-          subtasks: t.subtasks.map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st)
-        };
-      }
-      return t;
-    }));
+  const toggleSubtask = async (taskId: string, subtaskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const updatedSubtasks = task.subtasks.map(st => 
+      st.id === subtaskId ? { ...st, completed: !st.completed } : st
+    );
+
+    await updateTask(taskId, { subtasks: updatedSubtasks });
   };
 
   return {
