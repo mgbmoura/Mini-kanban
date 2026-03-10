@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-workspace",
+      "description": "Clean modern workspace with kanban board",
+      "imageUrl": "https://picsum.photos/seed/kanflow/1200/800",
+      "imageHint": "kanban board"
+    }
+  ]
 }
