@@ -34,14 +34,24 @@ export function useKanban() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Escuta em tempo real do Firestore
     const q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const taskList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Task[];
+      const taskList = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Garante que tags seja sempre um array
+          tags: data.tags || [],
+          priority: data.priority || 'Média'
+        } as Task;
+      });
       setTasks(taskList);
+      setLoading(false);
+    }, (error) => {
+      console.error("Erro ao buscar tarefas:", error);
       setLoading(false);
     });
 
@@ -49,23 +59,35 @@ export function useKanban() {
   }, []);
 
   const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await addDoc(collection(db, 'tasks'), {
-      ...task,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
-    });
+    try {
+      await addDoc(collection(db, 'tasks'), {
+        ...task,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+    } catch (e) {
+      console.error("Erro ao adicionar tarefa:", e);
+    }
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
-    const taskRef = doc(db, 'tasks', id);
-    await updateDoc(taskRef, {
-      ...updates,
-      updatedAt: Timestamp.now()
-    });
+    try {
+      const taskRef = doc(db, 'tasks', id);
+      await updateDoc(taskRef, {
+        ...updates,
+        updatedAt: Timestamp.now()
+      });
+    } catch (e) {
+      console.error("Erro ao atualizar tarefa:", e);
+    }
   };
 
   const deleteTask = async (id: string) => {
-    await deleteDoc(doc(db, 'tasks', id));
+    try {
+      await deleteDoc(doc(db, 'tasks', id));
+    } catch (e) {
+      console.error("Erro ao deletar tarefa:", e);
+    }
   };
 
   return { tasks, loading, addTask, updateTask, deleteTask };
