@@ -58,10 +58,13 @@ export function BoardPage() {
         const lastTask = tasksInNewColumn[tasksInNewColumn.length - 1];
         const newPosition = lastTask ? lastTask.position + 1 : 1;
 
-        await taskService.updateTask(taskId, { status: newStatus, position: newPosition });
+        const updatedTask = await taskService.updateTask(taskId, { status: newStatus, position: newPosition });
 
-        // Recarrega as tarefas para garantir a consistência total, incluindo a nova posição
-        loadTasks(); 
+        // Em vez de recarregar tudo, atualizamos o estado local com a resposta da API
+        setTasks(currentTasks => 
+            currentTasks.map(t => (t.id === updatedTask.id ? { ...t, ...updatedTask } : t))
+        );
+
     } catch (error) {
       console.error('Erro ao mover task:', error);
       // Reverte em caso de erro
@@ -176,7 +179,7 @@ export function BoardPage() {
   return (
     <>
       <KanbanBoard 
-        tasks={tasks.sort((a,b) => a.position - b.position)} // Garante que as tarefas são sempre passadas ordenadas
+        tasks={[...tasks].sort((a,b) => a.position - b.position)} // FIX: Create a shallow copy before sorting to prevent mutation
         onAddTask={handleAddTask}
         onTaskClick={handleTaskClick}
         onTaskMove={handleTaskMove}
