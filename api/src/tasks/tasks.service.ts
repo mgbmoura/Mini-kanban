@@ -39,7 +39,19 @@ export class TasksService {
    */
   async findAll(userId: string) {
     // Busca todas as tarefas que correspondem ao `userId` fornecido.
-    return this.prisma.task.findMany({ where: { userId } });
+    return this.prisma.task.findMany({
+      where: { userId },
+      include: {
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
+      orderBy: {
+        position: 'asc',
+      },
+    });
   }
 
   /**

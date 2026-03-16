@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;       /* slate-50 */
+    --foreground: 215 28% 27%;      /* slate-800 */
+    --card: 0 0% 100%;             /* white */
+    --card-foreground: 215 28% 27%;  /* slate-800 */
+    --popover: 0 0% 100%;          /* white */
+    --popover-foreground: 215 28% 27%; /* slate-800 */
+    --primary: 158 83% 35%;          /* emerald-600 */
+    --primary-foreground: 0 0% 100%;  /* white */
+    --secondary: 210 40% 96.1%;     /* slate-100 */
+    --secondary-foreground: 215 28% 17%; /* slate-900 */
+    --muted: 215 14% 47%;          /* slate-500 */
+    --muted-foreground: 215 14% 47%;  /* slate-500 */
+    --accent: 210 40% 96.1%;        /* slate-100 */
+    --accent-foreground: 158 83% 35%; /* emerald-600 */
+    --destructive: 0 72% 51%;        /* red-600 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 32% 91%;        /* slate-200 */
+    --input: 215 20% 65%;         /* slate-300 */
+    --ring: 158 79% 40%;           /* emerald-500 */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 210 29% 10%;    /* slate-950 */
+    --foreground: 210 40% 98%;   /* slate-50 */
+    --card: 210 29% 12%;        /* a bit lighter than bg */
+    --card-foreground: 210 40% 98%;
+    --popover: 210 29% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 259 92% 66%;      /* violet-500 */
+    --primary-foreground: 0 0% 100%; /* white */
+    --secondary: 217 33% 18%;     /* slate-800 */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;  /* slate-400 */
+    --accent: 217 33% 18%;
+    --accent-foreground: 259 92% 66%;
+    --destructive: 0 63% 31%;    /* red-900 */
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 259 92% 66%;
+    --radius: 0.5rem;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}

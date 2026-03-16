@@ -12,6 +12,7 @@ dist
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Environment variables
 .env*
@@ -19,4 +20,6 @@ yarn-error.log*
 # IDE files
 .vscode
 .idea
-.env
+
+# System files
+.DS_Store

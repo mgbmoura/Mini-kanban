@@ -9,7 +9,7 @@ import { IsEmail, IsString } from 'class-validator';
  */
 export class LoginDto {
   // Documenta a propriedade `email` no Swagger e aplica validadores.
-  @ApiProperty({ description: 'Endereço de e-mail do usuário', example: 'contato@marcelogiulian.com' })
+  @ApiProperty({ description: 'Endereço de e-mail do usuário', example: 'usuario@email.com' })
   @IsEmail({}, { message: 'O e-mail fornecido deve ser válido.' })
   email: string;
 

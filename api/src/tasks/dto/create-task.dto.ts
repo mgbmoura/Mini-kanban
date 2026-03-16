@@ -1,3 +1,5 @@
+// Importa o tipo TaskStatus do Prisma para garantir a consistência dos tipos de dados.
+import { TaskStatus } from '@prisma/client';
 // Importa o decorador `ApiProperty` para a documentação do Swagger.
 import { ApiProperty } from '@nestjs/swagger';
 // Importa os validadores do `class-validator` para garantir a integridade dos dados de entrada.
@@ -7,16 +9,18 @@ import {
   IsOptional,     // Marca a propriedade como opcional.
   IsIn,           // Verifica se o valor está dentro de um conjunto de valores permitidos.
   IsArray,        // Verifica se o valor é um array.
+  IsEnum,         // Verifica se o valor corresponde a um enum.
+  IsNumber,       // Verifica se o valor é um número.
 } from 'class-validator';
 
-// Define as constantes para os status e prioridades válidos, garantindo consistência.
-const VALID_STATUSES = ['TODO', 'DOING', 'DONE'];
+// Remove a constante local e usa diretamente o enum do Prisma.
+// const VALID_STATUSES = ['TODO', 'DOING', 'DONE'];
 const VALID_PRIORITIES = ['Baixa', 'Média', 'Alta'];
 
 /**
  * Define o Data Transfer Object (DTO) para a criação de uma nova tarefa.
  * Esta classe descreve a estrutura de dados esperada no corpo da requisição
- * e aplica regras de validação a cada campo.
+ * e aplica regras de validação a cada campo, usando agora o enum TaskStatus.
  */
 export class CreateTaskDto {
   // Documenta a propriedade no Swagger.
@@ -33,12 +37,12 @@ export class CreateTaskDto {
   @IsOptional()
   description?: string;
 
-  // Documenta com os valores de enum permitidos.
-  @ApiProperty({ enum: VALID_STATUSES, required: false })
-  // Validações: é opcional, mas se for fornecido, deve ser um dos status válidos.
+  // Documenta com os valores do enum TaskStatus.
+  @ApiProperty({ enum: TaskStatus, required: false })
+  // Validações: é opcional e deve ser um dos valores do enum TaskStatus.
   @IsOptional()
-  @IsIn(VALID_STATUSES)
-  status?: string;
+  @IsEnum(TaskStatus)
+  status?: TaskStatus;
 
   // Documenta com os valores de enum permitidos.
   @ApiProperty({ enum: VALID_PRIORITIES, required: false })
@@ -61,4 +65,11 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   attachmentImage?: string;
+
+  // Documenta como opcional no Swagger.
+  @ApiProperty({ required: false })
+  // Validações: deve ser um número, mas é opcional.
+  @IsNumber()
+  @IsOptional()
+  position?: number;
 }

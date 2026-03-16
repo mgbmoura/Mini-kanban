@@ -1,71 +1,112 @@
-// Importa decoradores e classes de exceção do NestJS.
-import { Injectable, ConflictException } from '@nestjs/common';
-// Importa o serviço do Prisma para interagir com o banco de dados.
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-// Importa os DTOs para validação e tipagem dos dados de entrada.
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-// Importa a biblioteca bcrypt para hashing de senhas.
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
-// Marca a classe como um provedor que pode ser injetado em outras partes da aplicação.
 @Injectable()
 export class UsersService {
-  // Injeta o PrismaService para permitir a comunicação com o banco de dados.
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Cria um novo usuário no banco de dados.
-   * @param data - Os dados do usuário a serem criados (nome, email, senha).
-   * @returns O usuário criado (sem a senha).
-   */
+  private generateGravatarUrl(email: string): string {
+    const trimmedEmail = email.trim().toLowerCase();
+    const hash = crypto.createHash('md5').update(trimmedEmail).digest('hex');
+    return `https://www.gravatar.com/avatar/${hash}?d=retro`;
+  }
+
   async create(data: CreateUserDto) {
-    // Verifica se já existe um usuário com o mesmo e-mail para evitar duplicatas.
-    const exists = await this.prisma.user.findUnique({ where: { email: data.email } });
-    // Se o e-mail já estiver em uso, lança uma exceção de conflito (HTTP 409).
-    if (exists) throw new ConflictException('E-mail já cadastrado');
+    const exists = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
 
-    // Gera um hash da senha do usuário para armazenamento seguro. O `10` é o "salt round".
+    if (exists) {
+      throw new BadRequestException('Este e-mail já está em uso.');
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
+    const gravatarUrl = this.generateGravatarUrl(data.email);
 
-    // Extrai os campos do DTO para garantir que apenas os dados esperados sejam passados ao Prisma.
-    const { name, email, avatarUrl } = data;
-
-    // Cria o novo usuário no banco de dados com a senha hasheada.
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
-        name,
-        email,
+        name: data.name,
+        email: data.email,
         password: hashedPassword,
-        avatarUrl: avatarUrl || null, // Garante que o valor seja `null` se `avatarUrl` for `undefined`.
+        avatarUrl: gravatarUrl,
       },
-      // Usa a cláusula `select` para retornar apenas os dados não sensíveis do usuário.
-      select: { id: true, email: true, name: true, avatarUrl: true },
+    });
+
+    // Para o método create, nós retornamos o usuário sem a senha.
+    const { password, ...result } = user;
+    return result;
+  }
+
+  async findAll() {
+    const users = await this.prisma.user.findMany();
+    // Mapeia para remover a senha de todos os usuários retornados.
+    return users.map(user => {
+      const { password, ...result } = user;
+      return result;
     });
   }
 
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('Utilizador não encontrado.');
+    }
+    // Retorna o usuário sem a senha.
+    const { password, ...result } = user;
+    return result;
+  }
+
   /**
-   * Busca um usuário pelo seu endereço de e-mail.
-   * Este método é crucial para o processo de login.
-   * @param email - O e-mail do usuário a ser encontrado.
-   * @returns O objeto completo do usuário (incluindo a senha hasheada) ou `null` se não for encontrado.
+   * Busca um usuário pelo e-mail para o fluxo de autenticação.
+   * CORREÇÃO: Esta função DEVE retornar o objeto de usuário completo, incluindo a senha,
+   * para que o AuthService possa comparar a senha fornecida com a senha hasheada.
+   * O AuthService será responsável por não expor a senha na resposta final da API.
    */
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    let user = await this.prisma.user.findUnique({ where: { email } });
+
+    // Se o usuário existir, mas não tiver um avatar, gera um Gravatar e atualiza.
+    if (user && !user.avatarUrl) {
+      const gravatarUrl = this.generateGravatarUrl(user.email);
+      user = await this.prisma.user.update({
+        where: { email: user.email },
+        data: { avatarUrl: gravatarUrl },
+      });
+    }
+
+    // Retorna o objeto de usuário completo (com senha) para o AuthService.
+    return user;
   }
 
-  /**
-   * Atualiza os dados de um usuário existente.
-   * @param id - O ID do usuário a ser atualizado.
-   * @param data - Os novos dados para o usuário.
-   * @returns Os dados atualizados do usuário (sem a senha).
-   */
   async update(id: string, data: UpdateUserDto) {
-    return this.prisma.user.update({
-      where: { id }, // Especifica qual usuário atualizar.
-      data,         // Fornece os novos dados.
-      // Retorna apenas os campos não sensíveis após a atualização.
-      select: { id: true, email: true, name: true, avatarUrl: true },
+    // DIAGNÓSTICO: Vamos ver os dados do usuário ANTES de qualquer atualização.
+    const userBeforeUpdate = await this.prisma.user.findUnique({ where: { id } });
+    console.log('--- DIAGNÓSTICO: DADOS DO USUÁRIO ANTES DA ATUALIZAÇÃO ---');
+    console.log(userBeforeUpdate);
+    console.log('---------------------------------------------------------');
+
+    if ((data as any).password) {
+      (data as any).password = await bcrypt.hash((data as any).password, 10);
+    }
+    
+    const user = await this.prisma.user.update({
+      where: { id },
+      data,
     });
+
+    // Retorna o usuário atualizado sem a senha.
+    const { password, ...result } = user;
+    return result;
+  }
+
+  async remove(id: string) {
+    const user = await this.prisma.user.delete({ where: { id } });
+    // Retorna o usuário removido sem a senha.
+    const { password, ...result } = user;
+    return result;
   }
 }

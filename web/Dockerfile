@@ -1,17 +1,24 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
-WORKDIR /app
+RUN npm install -g pnpm
+WORKDIR /usr/src/app
 
-# Copia os manifestos do pacote e instala as dependências
-COPY package*.json ./
-RUN npm install
+# Copia arquivos de dependências
+COPY web/package.json web/pnpm-lock.yaml* ./
 
-# Copia o restante do código da aplicação
-COPY . .
+RUN pnpm install
 
-# Expõe a porta padrão do Vite para o host
-EXPOSE 5173
+# Copia o código do frontend
+COPY web/ .
 
-# Comando para rodar o servidor de desenvolvimento do Vite
-# A flag --host é necessária para expor o servidor para fora do container
-CMD ["npm", "run", "dev", "--", "--host"]
+RUN pnpm run build
+
+FROM nginx:alpine
+
+# Copia o build para o diretório do Nginx
+COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

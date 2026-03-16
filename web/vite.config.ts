@@ -1,28 +1,30 @@
-import { defineConfig } from 'vite'
+/// <reference types="vitest" />
+import { defineConfig } from 'vitest/config'
 import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000', // O destino do seu backend
+        changeOrigin: true,
+        // A LINHA DO REWRITE FOI APAGADA AQUI! Agora o Vite é um espelho.
+      },
+    },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
+  },
   resolve: {
     alias: {
       '@': path.resolve(new URL(import.meta.url).pathname, './src'),
-    },
-  },
-  server: {
-    host: '0.0.0.0', 
-    port: 5173,      
-    proxy: {
-      '/api': {
-        target: 'http://kanban_api:3000', 
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
     },
   },
   assetsInclude: ['**/*.svg', '**/*.csv'],

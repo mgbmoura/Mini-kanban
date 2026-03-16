@@ -4,25 +4,32 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 // Importa o decorador `Injectable` para marcar a classe como um provedor.
 import { Injectable } from '@nestjs/common';
+// Importa o `ConfigService` para acessar variáveis de ambiente de forma segura.
+import { ConfigService } from '@nestjs/config';
 
 // Marca a classe como um provedor que pode ser gerenciado pelo container de injeção de dependência do NestJS.
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  /**
+   * Construtor da JwtStrategy.
+   * @param configService - Serviço injetado para acessar as configurações da aplicação (variáveis de ambiente).
+   */
+  constructor(private configService: ConfigService) {
     // Configura a estratégia JWT no construtor da classe pai.
     super({
       // Define que o JWT será extraído do cabeçalho de autorização como um Bearer Token.
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       // Garante que tokens expirados sejam rejeitados. `false` é o padrão e a opção mais segura.
       ignoreExpiration: false,
-      // A chave secreta usada para verificar a assinatura do token. DEVE ser a mesma chave usada no `JwtModule`.
-      secretOrKey: 'mini-kanban-secret-key', 
+      // CORREÇÃO: Busca a chave secreta do `ConfigService` (variáveis de ambiente).
+      // Isto garante que a mesma chave usada para assinar o token (no AuthModule) é usada para verificá-lo aqui.
+      secretOrKey: configService.get('JWT_SECRET'),
     });
   }
 
   /**
    * O método `validate` é chamado pelo NestJS após a verificação bem-sucedida do token JWT.
-   * O retorno deste método é o que será anexado ao objeto `request` (geralmente como `req.user`).
+   * O retorno deste método é o que será anexado ao objeto `request` (como `req.user`).
    * @param payload - O payload decodificado do token JWT.
    * @returns Um objeto simplificado com os dados do usuário que serão usados nas rotas protegidas.
    */

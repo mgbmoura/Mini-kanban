@@ -1,20 +1,17 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
+// Arquivo placeholder para evitar erros no Preview do Studio.
+// Não faz parte da entrega do desafio Teia Connect.
+import { initializeApp, getApps } from 'firebase/app';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSy...", // Fallback para evitar erro de inicialização se não houver .env
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyDummyKeyForPreviewPurposesOnly",
+  authDomain: "placeholder.firebaseapp.com",
+  projectId: "placeholder",
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-const storage = getStorage(app);
+if (typeof window !== 'undefined' && !getApps().length) {
+  initializeApp(firebaseConfig);
+}
 
-export { app, db, auth, storage };
+export const auth = undefined;
+export const db = undefined;
+export const storage = undefined;
