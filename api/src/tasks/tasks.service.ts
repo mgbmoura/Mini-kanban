@@ -34,11 +34,10 @@ export class TasksService {
 
   /**
    * Busca todas as tarefas associadas a um ID de usuário específico.
-   * @param userId - O ID do usuário cujas tarefas serão buscadas.
-   * @returns Uma lista de tarefas.
+   * Utilizamos o `_count` para trazer o número de comentários sem precisar carregar todos eles.
+   * Ordenamos pela `position` para manter a ordem do Kanban definida pelo usuário.
    */
   async findAll(userId: string) {
-    // Busca todas as tarefas que correspondem ao `userId` fornecido.
     return this.prisma.task.findMany({
       where: { userId },
       include: {
@@ -49,49 +48,37 @@ export class TasksService {
         },
       },
       orderBy: {
-        position: 'asc',
+        position: 'asc', // Importante para o Drag and Drop funcionar corretamente
       },
     });
   }
 
   /**
    * Atualiza uma tarefa existente.
-   * @param id - O ID da tarefa a ser atualizada.
-   * @param userId - O ID do usuário que está tentando atualizar a tarefa (para verificação de permissão).
-   * @param data - Os novos dados para a tarefa.
-   * @returns A tarefa atualizada.
+   * Realiza uma verificação de segurança (Ownership) para garantir que apenas o dono da tarefa possa editá-la.
    */
   async update(id: string, userId: string, data: UpdateTaskDto) {
-    // Primeiro, busca a tarefa pelo ID para garantir que ela existe.
     const task = await this.prisma.task.findUnique({ where: { id } });
 
-    // Se a tarefa não for encontrada, lança uma exceção HTTP 404.
     if (!task) throw new NotFoundException('Tarefa não encontrada');
 
-    // Se o ID do usuário da tarefa for diferente do ID do usuário que fez a requisição, lança uma exceção de não autorizado.
+    // Validação de Segurança: Se o usuário logado não for o dono da tarefa, barramos a ação.
     if (task.userId !== userId) throw new UnauthorizedException('Você não tem permissão para editar esta tarefa');
 
-    // Se tudo estiver correto, atualiza a tarefa com os novos dados.
     return this.prisma.task.update({ where: { id }, data });
   }
 
   /**
    * Remove uma tarefa do banco de dados.
-   * @param id - O ID da tarefa a ser removida.
-   * @param userId - O ID do usuário que está tentando remover a tarefa (para verificação de permissão).
-   * @returns A tarefa que foi removida.
+   * Também verifica a propriedade da tarefa antes de deletar.
    */
   async remove(id: string, userId: string) {
-    // Busca a tarefa para garantir que ela existe antes de tentar removê-la.
     const task = await this.prisma.task.findUnique({ where: { id } });
 
-    // Se não encontrar a tarefa, lança um erro 404.
     if (!task) throw new NotFoundException('Tarefa não encontrada');
 
-    // Verifica se o usuário tem permissão para remover a tarefa.
     if (task.userId !== userId) throw new UnauthorizedException('Você não tem permissão para remover esta tarefa');
 
-    // Se as verificações passarem, remove a tarefa do banco de dados.
     return this.prisma.task.delete({ where: { id } });
   }
 }

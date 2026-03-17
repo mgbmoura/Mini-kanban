@@ -7,35 +7,31 @@ import { Injectable } from '@nestjs/common';
 // Importa o `ConfigService` para acessar variáveis de ambiente de forma segura.
 import { ConfigService } from '@nestjs/config';
 
-// Marca a classe como um provedor que pode ser gerenciado pelo container de injeção de dependência do NestJS.
+/**
+ * JwtStrategy: O Guardião das rotas.
+ * Esta classe é responsável por pegar o token enviado pelo frontend, 
+ * descriptografá-lo e verificar se ele é autêntico.
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  /**
-   * Construtor da JwtStrategy.
-   * @param configService - Serviço injetado para acessar as configurações da aplicação (variáveis de ambiente).
-   */
   constructor(private configService: ConfigService) {
-    // Configura a estratégia JWT no construtor da classe pai.
     super({
-      // Define que o JWT será extraído do cabeçalho de autorização como um Bearer Token.
+      // 1. Extração: Como vamos achar o token? No Header de autorização como "Bearer TOKEN".
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      // Garante que tokens expirados sejam rejeitados. `false` é o padrão e a opção mais segura.
+      // 2. Validação: Tokens expirados devem ser rejeitados.
       ignoreExpiration: false,
-      // CORREÇÃO: Busca a chave secreta do `ConfigService` (variáveis de ambiente).
-      // Isto garante que a mesma chave usada para assinar o token (no AuthModule) é usada para verificá-lo aqui.
+      // 3. Segurança: Chave secreta usada para validar a assinatura do token.
       secretOrKey: configService.get('JWT_SECRET'),
     });
   }
 
   /**
-   * O método `validate` é chamado pelo NestJS após a verificação bem-sucedida do token JWT.
-   * O retorno deste método é o que será anexado ao objeto `request` (como `req.user`).
-   * @param payload - O payload decodificado do token JWT.
-   * @returns Um objeto simplificado com os dados do usuário que serão usados nas rotas protegidas.
+   * O método `validate` é chamado automaticamente se o token for válido.
+   * O que retornamos aqui será injetado no objeto `request` (ex: `req.user`).
+   * @param payload - Os dados descriptografados de dentro do token (sub, email, name).
    */
   async validate(payload: any) {
-    // O payload contém os dados que foram colocados nele durante o login (sub, email, nome).
-    // Retornamos um objeto que estará disponível no `req.user` dos controllers.
+    // Retornamos um objeto simples que identifica o usuário logado para os controllers.
     return { id: payload.sub, email: payload.email, name: payload.name };
   }
 }

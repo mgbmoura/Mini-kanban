@@ -1,10 +1,14 @@
-
 import { KanbanBoard } from '../../components/KanbanBoard';
 import { TaskModal } from '../../components/TaskModal';
 import { useState, useEffect } from 'react';
 import taskService, { Task, TaskStatus } from '../../services/taskService';
 import { KanbanSkeleton } from '../../components/KanbanSkeleton';
 
+/**
+ * BoardPage: Página principal do Quadro Kanban.
+ * Gerencia o estado das tarefas, a lógica de movimentação entre colunas 
+ * e a integração com o backend via taskService.
+ */
 export function BoardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,6 +16,7 @@ export function BoardPage() {
   const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>('TODO');
   const [loading, setLoading] = useState(true);
 
+  // Carrega as tarefas assim que o componente é montado.
   useEffect(() => {
     loadTasks();
   }, []);
@@ -39,11 +44,17 @@ export function BoardPage() {
     setIsModalOpen(true);
   };
 
+  /**
+   * handleTaskMove: Lógica de arrastar uma tarefa entre colunas.
+   * Implementamos uma lógica de posição numérica dinâmica para evitar reordenar todo o banco.
+   * Calculamos a média da posição entre a tarefa de cima e a de baixo.
+   */
   const handleTaskMove = async (taskId: string, newStatus: TaskStatus, destinationIndex: number) => {
     const originalTasks = [...tasks];
     const movedTask = tasks.find(t => t.id === taskId);
     if (!movedTask) return;
 
+    // Filtra tarefas da coluna de destino e ordena para achar os vizinhos.
     const tasksInNewColumn = originalTasks
         .filter(t => t.status === newStatus)
         .sort((a, b) => a.position - b.position);
@@ -51,12 +62,14 @@ export function BoardPage() {
     const taskBefore = tasksInNewColumn[destinationIndex - 1];
     const taskAfter = tasksInNewColumn[destinationIndex];
 
+    // Cálculo da Nova Posição:
     let newPosition;
     if (!taskBefore && taskAfter) { newPosition = taskAfter.position / 2; } 
     else if (taskBefore && !taskAfter) { newPosition = taskBefore.position + 1; } 
     else if (taskBefore && taskAfter) { newPosition = (taskBefore.position + taskAfter.position) / 2; }
     else { newPosition = 1; }
 
+    // Atualização OTIMISTA: Atualizamos a UI antes da resposta do servidor para maior fluidez.
     const optimisticState = originalTasks.map(task =>
       task.id === taskId
         ? { ...task, status: newStatus, position: newPosition }
@@ -66,8 +79,10 @@ export function BoardPage() {
     setTasks(optimisticState);
 
     try {
+      // Envia a mudança para o backend em segundo plano.
       const updatedTaskFromApi = await taskService.updateTask(taskId, { status: newStatus, position: newPosition });
       
+      // Sincroniza o estado final com os dados reais do servidor.
       setTasks(currentTasks => {
         const taskInState = currentTasks.find(t => t.id === taskId);
         return currentTasks.map(t => 
@@ -78,11 +93,16 @@ export function BoardPage() {
       });
     } catch (error) {
       console.error('Erro ao mover task:', error);
+      // ROLLBACK: Em caso de erro, voltamos as tarefas para o estado original.
       setTasks(originalTasks); 
       alert("Ocorreu um erro ao mover a tarefa. Tente novamente.");
     }
   };
 
+  /**
+   * handleMoveCard: Lógica de reordenação dentro da MESMA coluna.
+   * Segue a mesma lógica de cálculo de posição por média.
+   */
   const handleMoveCard = async (dragIndex: number, hoverIndex: number, dragStatus: TaskStatus) => {
     const originalTasks = [...tasks];
 
@@ -128,16 +148,16 @@ export function BoardPage() {
     }
   };
 
-  // SOLUÇÃO: A função agora aceita a contagem de comentários vinda do modal
+  /**
+   * handleSaveTask: Salva uma tarefa nova ou editada.
+   */
   const handleSaveTask = async (taskData: Partial<Task> & { commentCount?: number }) => {
     try {
       if (taskData.id) {
         const taskId = taskData.id;
-        // Separa o commentCount do resto dos dados a serem enviados para a API
         const { commentCount, ...updatePayload } = taskData;
         const updatedTaskFromApi = await taskService.updateTask(taskId, updatePayload);
 
-        // Atualiza o estado usando o commentCount que veio do modal, não da API
         setTasks(currentTasks =>
           currentTasks.map(t =>
             t.id === taskId
@@ -147,6 +167,7 @@ export function BoardPage() {
         );
 
       } else {
+        // Para novas tarefas, colocamos elas sempre no final da lista.
         const tasksInStatus = tasks.filter(t => t.status === (taskData.status || newTaskStatus));
         const maxPosition = Math.max(0, ...tasksInStatus.map(t => t.position));
         taskData.position = maxPosition + 1;
@@ -196,7 +217,6 @@ export function BoardPage() {
         onMoveCard={handleMoveCard}
       />
 
-      {/* SOLUÇÃO: A propriedade onCommentCountUpdate foi removida */}
       <TaskModal
         task={selectedTask}
         isOpen={isModalOpen}
