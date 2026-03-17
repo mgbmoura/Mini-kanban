@@ -11,14 +11,13 @@ interface TaskModalProps {
   task?: Task; 
   isOpen: boolean; 
   onClose: () => void; 
-  onSave: (taskData: Partial<Task>) => void; 
+  onSave: (taskData: Partial<Task> & { commentCount?: number }) => void; // A contagem de comentários é opcionalmente passada aqui
   onDelete?: (taskId: string) => void; 
-  onCommentCountUpdate?: (taskId: string, count: number) => void; 
   defaultStatus?: TaskStatus;
 }
 
-// CORRIGIDO: O valor por defeito para defaultStatus agora é 'TODO'.
-export function TaskModal({ task, isOpen, onClose, onSave, onDelete, onCommentCountUpdate, defaultStatus = 'TODO' }: TaskModalProps) {
+// A propriedade onCommentCountUpdate foi REMOVIDA
+export function TaskModal({ task, isOpen, onClose, onSave, onDelete, defaultStatus = 'TODO' }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<TaskStatus>(defaultStatus);
@@ -78,12 +77,9 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete, onCommentCo
 
     try {
       const newComment = await commentService.createComment(task.id, commentInput.trim());
-      const updatedComments = [...comments, newComment];
-      setComments(updatedComments);
+      // Apenas atualiza o estado local de comentários
+      setComments(prevComments => [...prevComments, newComment]);
       setCommentInput('');
-      if (onCommentCountUpdate) {
-        onCommentCountUpdate(task.id, updatedComments.length);
-      }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
     }
@@ -95,11 +91,8 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete, onCommentCo
 
     try {
       await commentService.deleteComment(commentId);
-      const updatedComments = comments.filter(c => c.id !== commentId);
-      setComments(updatedComments);
-      if (onCommentCountUpdate) {
-        onCommentCountUpdate(task.id, updatedComments.length);
-      }
+      // Apenas atualiza o estado local de comentários
+      setComments(prevComments => prevComments.filter(c => c.id !== commentId));
     } catch (error) {
       console.error('Erro ao deletar comentário:', error);
     }
@@ -134,7 +127,17 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete, onCommentCo
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ id: task?.id, title, description, status, priority, tags, attachmentImage });
+    // SOLUÇÃO: Passa a contagem de comentários correta no momento de salvar
+    onSave({ 
+      id: task?.id, 
+      title, 
+      description, 
+      status, 
+      priority, 
+      tags, 
+      attachmentImage, 
+      commentCount: comments.length // A fonte da verdade
+    });
     onClose(); 
   };
 
@@ -182,174 +185,186 @@ export function TaskModal({ task, isOpen, onClose, onSave, onDelete, onCommentCo
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 flex-1">
           <div className="lg:col-span-2 space-y-5">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5 flex flex-col h-full">
               
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Título *
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  placeholder="Digite o título da tarefa"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Descrição
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                  placeholder="Adicione uma descrição (opcional)"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex-grow space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                    Status
+                    Título *
                   </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  >
-                    <option value="TODO">A Fazer</option>
-                    <option value="DOING">Em Andamento</option>
-                    <option value="DONE">Concluído</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                    Prioridade
-                  </label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  >
-                    <option value="Baixa">Baixa</option>
-                    <option value="Média">Média</option>
-                    <option value="Alta">Alta</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Tags
-                </label>
-                <div className="flex gap-2 mb-2">
                   <input
                     type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                    className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    placeholder="Digite uma tag"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Digite o título da tarefa"
+                    required
                   />
-                  <button
-                    type="button"
-                    onClick={handleAddTag}
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors"
-                  >
-                    Adicionar
-                  </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full text-sm font-medium flex items-center gap-2"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Imagem (URL)
-                </label>
-                {attachmentImage ? (
-                  <div className="space-y-2">
-                    <img
-                      src={attachmentImage}
-                      alt="Preview"
-                      className="w-full h-40 object-cover rounded-lg border border-slate-300 dark:border-slate-700"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setAttachmentImage('')}
-                      className="text-sm text-red-500 hover:text-red-600"
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Descrição
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                    placeholder="Adicione uma descrição (opcional)"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                      Status
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as TaskStatus)}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     >
-                      Remover imagem
-                    </button>
+                      <option value="TODO">A Fazer</option>
+                      <option value="DOING">Em Andamento</option>
+                      <option value="DONE">Concluído</option>
+                    </select>
                   </div>
-                ) : (
-                  <div className="flex gap-2">
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                      Prioridade
+                    </label>
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    >
+                      <option value="Baixa">Baixa</option>
+                      <option value="Média">Média</option>
+                      <option value="Alta">Alta</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Tags
+                  </label>
+                  <div className="flex gap-2 mb-2">
                     <input
-                      type="url"
-                      value={imageInput}
-                      onChange={(e) => setImageInput(e.target.value)}
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                       className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="Cole a URL da imagem"
+                      placeholder="Digite uma tag"
                     />
                     <button
                       type="button"
-                      onClick={handleAddImage}
-                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+                      onClick={handleAddTag}
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors"
                     >
-                      <ImageIcon className="w-4 h-4" />
                       Adicionar
                     </button>
                   </div>
-                )}
-              </div>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full text-sm font-medium flex items-center gap-2"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-              <div className="flex items-center justify-between pt-5 border-t border-slate-200 dark:border-slate-800">
                 <div>
-                  {task && onDelete && (
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      className="px-4 py-2.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-lg transition-colors flex items-center gap-2 font-medium"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Excluir
-                    </button>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Imagem (URL)
+                  </label>
+                  {attachmentImage ? (
+                    <div className="space-y-2">
+                      <img
+                        src={attachmentImage}
+                        alt="Preview"
+                        className="w-full h-40 object-cover rounded-lg border border-slate-300 dark:border-slate-700"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setAttachmentImage('')}
+                        className="text-sm text-red-500 hover:text-red-600"
+                      >
+                        Remover imagem
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={imageInput}
+                        onChange={(e) => setImageInput(e.target.value)}
+                        className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        placeholder="Cole a URL da imagem"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddImage}
+                        className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                        Adicionar
+                      </button>
+                    </div>
                   )}
                 </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors font-semibold"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-semibold"
-                  >
-                    {task ? 'Salvar' : 'Criar'}
-                  </button>
+              </div>
+              
+              <div className="mt-auto space-y-4">
+                {task && (
+                  <div className="text-xs text-slate-500 dark:text-slate-400 pt-4 text-center border-t border-slate-200 dark:border-slate-800">
+                    <span>Criada em: {new Date(task.createdAt).toLocaleString('pt-BR')}</span>
+                    <span className="mx-2">|</span>
+                    <span>Última atualização: {new Date(task.updatedAt).toLocaleString('pt-BR')}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    {task && onDelete && (
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="px-4 py-2.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-lg transition-colors flex items-center gap-2 font-medium"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Excluir
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors font-semibold"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-semibold"
+                    >
+                      {task ? 'Salvar' : 'Criar'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </form>

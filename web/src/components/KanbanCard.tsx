@@ -18,20 +18,20 @@ export function KanbanCard({ task, index, onClick }: KanbanCardProps) {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={() => onClick(task)}
-          className={`p-4 mb-3 rounded-lg shadow-sm cursor-pointer transition-colors ${ 
-            snapshot.isDragging 
-              ? 'bg-emerald-50 dark:bg-emerald-900/60' 
+          className={`p-4 mb-3 rounded-lg shadow-sm cursor-pointer transition-colors ${
+            snapshot.isDragging
+              ? 'bg-emerald-50 dark:bg-emerald-900/60'
               : 'bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700'
           }`}
         >
           {task.attachmentImage && (
-            <img 
-              src={task.attachmentImage} 
-              alt={task.title} 
+            <img
+              src={task.attachmentImage}
+              alt={task.title}
               className="w-full h-32 object-cover rounded-md mb-3"
             />
           )}
-          
+
           <h4 className="font-semibold text-sm text-slate-800 dark:text-slate-200 mb-2">
             {task.title}
           </h4>
@@ -39,8 +39,8 @@ export function KanbanCard({ task, index, onClick }: KanbanCardProps) {
           {task.tags && task.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {task.tags.map((tag, index) => (
-                <span 
-                  key={index} 
+                <span
+                  key={index}
                   className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-xs font-medium"
                 >
                   {tag}
@@ -54,15 +54,17 @@ export function KanbanCard({ task, index, onClick }: KanbanCardProps) {
               {task.attachmentImage && <Paperclip className="w-4 h-4" />}
               <div className="flex items-center gap-1">
                 <MessageSquare className="w-4 h-4" />
-                <span>{task._count?.comments || 0}</span>
+                {/* Corrigido para usar a nova propriedade commentCount */}
+                <span>{task.commentCount || 0}</span>
               </div>
             </div>
 
-            <div className={`px-2 py-1 rounded-full text-white ${{
-              'Alta': 'bg-red-500',
-              'Média': 'bg-yellow-500',
-              'Baixa': 'bg-green-500'
-            }[task.priority || 'Média']}`}>
+            <div
+              className={`px-2 py-1 rounded-full text-white text-xs font-medium ${{
+                'Alta': 'bg-red-500',
+                'Média': 'bg-yellow-500',
+                'Baixa': 'bg-green-500'
+              }[task.priority || 'Média']}`}>
               {task.priority}
             </div>
           </div>

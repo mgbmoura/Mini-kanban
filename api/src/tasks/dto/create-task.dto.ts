@@ -1,74 +1,50 @@
-// Importa o tipo TaskStatus do Prisma para garantir a consistência dos tipos de dados.
 import { TaskStatus } from '@prisma/client';
-// Importa o decorador `ApiProperty` para a documentação do Swagger.
 import { ApiProperty } from '@nestjs/swagger';
-// Importa os validadores do `class-validator` para garantir a integridade dos dados de entrada.
 import {
-  IsString,       // Verifica se o valor é uma string.
-  IsNotEmpty,     // Verifica se o valor não é vazio.
-  IsOptional,     // Marca a propriedade como opcional.
-  IsIn,           // Verifica se o valor está dentro de um conjunto de valores permitidos.
-  IsArray,        // Verifica se o valor é um array.
-  IsEnum,         // Verifica se o valor corresponde a um enum.
-  IsNumber,       // Verifica se o valor é um número.
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsIn,
+  IsArray,
+  IsEnum,
+  IsNumber,
 } from 'class-validator';
 
-// Remove a constante local e usa diretamente o enum do Prisma.
-// const VALID_STATUSES = ['TODO', 'DOING', 'DONE'];
 const VALID_PRIORITIES = ['Baixa', 'Média', 'Alta'];
 
-/**
- * Define o Data Transfer Object (DTO) para a criação de uma nova tarefa.
- * Esta classe descreve a estrutura de dados esperada no corpo da requisição
- * e aplica regras de validação a cada campo, usando agora o enum TaskStatus.
- */
 export class CreateTaskDto {
-  // Documenta a propriedade no Swagger.
-  @ApiProperty()
-  // Validações: deve ser uma string e não pode ser vazia.
+  @ApiProperty({ description: 'Título da tarefa', example: 'Minha Tarefa' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  // Documenta como opcional no Swagger.
-  @ApiProperty({ required: false })
-  // Validações: deve ser uma string, mas é opcional.
+  @ApiProperty({ description: 'Descrição da tarefa', example: 'Descrição da minha tarefa', required: false })
   @IsString()
   @IsOptional()
   description?: string;
 
-  // Documenta com os valores do enum TaskStatus.
-  @ApiProperty({ enum: TaskStatus, required: false })
-  // Validações: é opcional e deve ser um dos valores do enum TaskStatus.
+  @ApiProperty({ enum: TaskStatus, description: 'Status da tarefa', example: 'TODO', required: false })
   @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 
-  // Documenta com os valores de enum permitidos.
-  @ApiProperty({ enum: VALID_PRIORITIES, required: false })
-  // Validações: é opcional, mas se for fornecido, deve ser uma das prioridades válidas.
+  @ApiProperty({ enum: VALID_PRIORITIES, description: 'Prioridade da tarefa', example: 'Média', required: false })
   @IsOptional()
   @IsIn(VALID_PRIORITIES)
   priority?: string;
 
-  // Documenta como um array de strings opcional.
-  @ApiProperty({ type: [String], required: false })
-  // Validações: é opcional, deve ser um array e cada item do array deve ser uma string.
+  @ApiProperty({ type: [String], description: 'Tags da tarefa', example: ['Tag1', 'Tag2'], required: false })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
 
-  // Documenta como opcional.
-  @ApiProperty({ required: false })
-  // Validações: é opcional e, se presente, deve ser uma string (representando a URL ou nome do arquivo).
+  @ApiProperty({ description: 'URL de uma imagem anexa', example: 'https://example.com/image.png', required: false })
   @IsOptional()
   @IsString()
   attachmentImage?: string;
 
-  // Documenta como opcional no Swagger.
-  @ApiProperty({ required: false })
-  // Validações: deve ser um número, mas é opcional.
+  @ApiProperty({ description: 'Posição da tarefa', example: 1, required: false })
   @IsNumber()
   @IsOptional()
   position?: number;

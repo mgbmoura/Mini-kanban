@@ -7,7 +7,7 @@ interface KanbanBoardProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   onAddTask: (status: TaskStatus) => void;
-  onTaskMove: (taskId: string, newStatus: TaskStatus) => void;
+  onTaskMove: (taskId: string, newStatus: TaskStatus, destinationIndex: number) => void;
   onMoveCard: (dragIndex: number, hoverIndex: number, dragStatus: TaskStatus) => void;
 }
 
@@ -25,7 +25,7 @@ export function KanbanBoard({ tasks, onTaskClick, onAddTask, onTaskMove, onMoveC
 
     // Se o card foi movido para uma coluna diferente
     if (sourceStatus !== destinationStatus) {
-      onTaskMove(draggableId, destinationStatus);
+      onTaskMove(draggableId, destinationStatus, destination.index);
     } else { // Se o card foi reordenado na mesma coluna
         // Se foi solto no mesmo lugar, não faz nada
         if (source.index === destination.index) {

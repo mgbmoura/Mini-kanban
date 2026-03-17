@@ -1,33 +1,21 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { authService } from '../services/authService';
 import { User } from '../types/user';
-import { Toaster } from './ui/sonner';
 
-export function MainLayout() {
+interface MainLayoutProps {
+  user: User;
+  onLogout: () => void;
+  onProfileUpdate: () => void;
+}
+
+export function MainLayout({ user, onLogout, onProfileUpdate }: MainLayoutProps) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const navigate = useNavigate();
-
-  const handleProfileUpdate = useCallback(() => {
-    const updatedUser = authService.getUser();
-    setUser(updatedUser);
-  }, []);
-
-  useEffect(() => {
-    handleProfileUpdate(); 
-  }, [handleProfileUpdate]);
-
-  const handleLogout = () => {
-    authService.logout();
-    navigate('/login');
-  };
 
   if (!user) {
-    return null; 
+    return null;
   }
 
   return (
@@ -35,16 +23,17 @@ export function MainLayout() {
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onLogout={handleLogout}
+        onLogout={onLogout} // Corrigido: Passa a função de logout correta para a sidebar
         user={user}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Corrigido: O Header não precisa da função onLogout */}
         <Header onMenuClick={() => setSidebarOpen(true)} user={user} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
-          <Outlet context={{ onProfileUpdate: handleProfileUpdate }} />
+          {/* Passa a função onProfileUpdate através do contexto da Outlet */}
+          <Outlet context={{ onProfileUpdate }} />
         </main>
       </div>
-      <Toaster richColors position="top-right" />
     </div>
   );
 }

@@ -9,12 +9,11 @@ export interface Task {
   tags?: string[];
   attachmentImage?: string;
   position: number;
-  _count?: {
-    comments: number;
-  };
+  createdAt: string; // Adicionado para corresponder aos dados da API
+  updatedAt: string; // Adicionado para corresponder aos dados da API
+  commentCount?: number; // Campo para a contagem de comentários
 }
 
-// REVERTIDO: De volta aos status corretos que o backend espera.
 export type TaskStatus = 'TODO' | 'DOING' | 'DONE';
 export type TaskPriority = 'Baixa' | 'Média' | 'Alta';
 
@@ -30,17 +29,27 @@ export interface CreateTaskDTO {
 
 const getTasks = async (): Promise<Task[]> => {
   const response = await api.get('/tasks');
-  return response.data;
+  // Mapeia a resposta para mover _count.comments para commentCount
+  return response.data.map((task: any) => ({
+    ...task,
+    commentCount: task._count?.comments || 0,
+  }));
 };
 
 const createTask = async (data: Partial<CreateTaskDTO>): Promise<Task> => {
   const response = await api.post('/tasks', data);
-  return response.data;
+  return {
+    ...response.data,
+    commentCount: response.data._count?.comments || 0,
+  };
 };
 
 const updateTask = async (id: string, data: Partial<CreateTaskDTO>): Promise<Task> => {
   const response = await api.patch(`/tasks/${id}`, data);
-  return response.data;
+  return {
+    ...response.data,
+    commentCount: response.data._count?.comments || 0,
+  };
 };
 
 const deleteTask = async (id: string): Promise<void> => {

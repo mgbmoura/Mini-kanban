@@ -39,98 +39,114 @@ export function BoardPage() {
     setIsModalOpen(true);
   };
 
-  const handleTaskMove = async (taskId: string, newStatus: TaskStatus) => {
-    const originalTasks = tasks;
+  const handleTaskMove = async (taskId: string, newStatus: TaskStatus, destinationIndex: number) => {
+    const originalTasks = [...tasks];
     const movedTask = tasks.find(t => t.id === taskId);
     if (!movedTask) return;
 
-    // Atualização otimista da UI
-    const optimisticTasks = tasks.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
+    const tasksInNewColumn = originalTasks
+        .filter(t => t.status === newStatus)
+        .sort((a, b) => a.position - b.position);
+
+    const taskBefore = tasksInNewColumn[destinationIndex - 1];
+    const taskAfter = tasksInNewColumn[destinationIndex];
+
+    let newPosition;
+    if (!taskBefore && taskAfter) { newPosition = taskAfter.position / 2; } 
+    else if (taskBefore && !taskAfter) { newPosition = taskBefore.position + 1; } 
+    else if (taskBefore && taskAfter) { newPosition = (taskBefore.position + taskAfter.position) / 2; }
+    else { newPosition = 1; }
+
+    const optimisticState = originalTasks.map(task =>
+      task.id === taskId
+        ? { ...task, status: newStatus, position: newPosition }
+        : task
     );
-    setTasks(optimisticTasks);
+    
+    setTasks(optimisticState);
 
     try {
-        // Encontra a última tarefa na nova coluna para calcular a posição
-        const tasksInNewColumn = optimisticTasks
-            .filter(t => t.status === newStatus && t.id !== taskId)
-            .sort((a, b) => a.position - b.position);
-        const lastTask = tasksInNewColumn[tasksInNewColumn.length - 1];
-        const newPosition = lastTask ? lastTask.position + 1 : 1;
-
-        const updatedTask = await taskService.updateTask(taskId, { status: newStatus, position: newPosition });
-
-        // Em vez de recarregar tudo, atualizamos o estado local com a resposta da API
-        setTasks(currentTasks => 
-            currentTasks.map(t => (t.id === updatedTask.id ? { ...t, ...updatedTask } : t))
+      const updatedTaskFromApi = await taskService.updateTask(taskId, { status: newStatus, position: newPosition });
+      
+      setTasks(currentTasks => {
+        const taskInState = currentTasks.find(t => t.id === taskId);
+        return currentTasks.map(t => 
+          t.id === taskId 
+          ? { ...t, ...updatedTaskFromApi, commentCount: taskInState?.commentCount }
+          : t
         );
-
+      });
     } catch (error) {
       console.error('Erro ao mover task:', error);
-      // Reverte em caso de erro
       setTasks(originalTasks); 
-      alert("Ocorreu um erro ao mover a tarefa. Tente novamente.")
+      alert("Ocorreu um erro ao mover a tarefa. Tente novamente.");
     }
   };
 
   const handleMoveCard = async (dragIndex: number, hoverIndex: number, dragStatus: TaskStatus) => {
-    const originalTasks = tasks;
-    
-    // Lógica para reordenar a lista de tarefas para a UI (atualização otimista)
-    const reorderedTasks = [...tasks];
-    const tasksInColumn = reorderedTasks.filter(task => task.status === dragStatus).sort((a,b) => a.position - b.position);
-    const otherTasks = reorderedTasks.filter(task => task.status !== dragStatus);
+    const originalTasks = [...tasks];
+
+    const tasksInColumn = tasks
+      .filter(task => task.status === dragStatus)
+      .sort((a, b) => a.position - b.position);
     
     const [draggedItem] = tasksInColumn.splice(dragIndex, 1);
     tasksInColumn.splice(hoverIndex, 0, draggedItem);
 
-    const optimisticState = [...otherTasks, ...tasksInColumn].sort((a, b) => {
-        if (a.status !== b.status) return 0; // Não reordena entre colunas
-        return a.position - b.position;
-    });
+    const taskBefore = tasksInColumn[hoverIndex - 1];
+    const taskAfter = tasksInColumn[hoverIndex + 1];
 
+    let newPosition;
+    if (!taskBefore && taskAfter) { newPosition = taskAfter.position / 2; } 
+    else if (taskBefore && !taskAfter) { newPosition = taskBefore.position + 1; } 
+    else if (taskBefore && taskAfter) { newPosition = (taskBefore.position + taskAfter.position) / 2; } 
+    else { newPosition = 1; }
+    
+    const optimisticState = originalTasks.map(task => 
+      task.id === draggedItem.id 
+        ? { ...task, position: newPosition }
+        : task
+    );
+    
     setTasks(optimisticState);
 
-    // Calcula a nova posição e atualiza no backend
     try {
-        const taskBefore = tasksInColumn[hoverIndex - 1];
-        const taskAfter = tasksInColumn[hoverIndex + 1];
+      const updatedTaskFromApi = await taskService.updateTask(draggedItem.id, { position: newPosition });
 
-        let newPosition;
-        if (!taskBefore && taskAfter) { // Movido para o início da lista
-            newPosition = taskAfter.position / 2;
-        } else if (taskBefore && !taskAfter) { // Movido para o final da lista
-            newPosition = taskBefore.position + 1;
-        } else if (taskBefore && taskAfter) { // Movido entre duas tarefas
-            newPosition = (taskBefore.position + taskAfter.position) / 2;
-        } else { // Única tarefa na coluna
-            newPosition = 1;
-        }
-        
-        const updatedTask = await taskService.updateTask(draggedItem.id, { position: newPosition });
-
-        // Atualiza o estado final com a posição retornada pela API para garantir consistência
-        setTasks(currentTasks => 
-            currentTasks.map(t => (t.id === updatedTask.id ? { ...t, ...updatedTask } : t))
+      setTasks(currentTasks => {
+        const taskInState = currentTasks.find(t => t.id === draggedItem.id);
+        return currentTasks.map(t => 
+          t.id === draggedItem.id 
+          ? { ...t, ...updatedTaskFromApi, commentCount: taskInState?.commentCount }
+          : t
         );
-
+      });
     } catch (error) {
-        console.error('Erro ao reordenar a tarefa:', error);
-        // Reverte a UI em caso de falha
-        setTasks(originalTasks);
-        alert("Ocorreu um erro ao reordenar a tarefa. Tente novamente.");
+      console.error('Erro ao reordenar a tarefa:', error);
+      setTasks(originalTasks);
+      alert("Ocorreu um erro ao reordenar a tarefa. Tente novamente.");
     }
   };
 
-  const handleSaveTask = async (taskData: Partial<Task>) => {
+  // SOLUÇÃO: A função agora aceita a contagem de comentários vinda do modal
+  const handleSaveTask = async (taskData: Partial<Task> & { commentCount?: number }) => {
     try {
       if (taskData.id) {
-        const updatedTask = await taskService.updateTask(taskData.id, taskData);
-        setTasks(currentTasks => 
-          currentTasks.map(t => (t.id === updatedTask.id ? { ...t, ...updatedTask } : t))
-        );
-      } else {
+        const taskId = taskData.id;
+        // Separa o commentCount do resto dos dados a serem enviados para a API
+        const { commentCount, ...updatePayload } = taskData;
+        const updatedTaskFromApi = await taskService.updateTask(taskId, updatePayload);
 
+        // Atualiza o estado usando o commentCount que veio do modal, não da API
+        setTasks(currentTasks =>
+          currentTasks.map(t =>
+            t.id === taskId
+              ? { ...t, ...updatedTaskFromApi, commentCount: commentCount }
+              : t
+          )
+        );
+
+      } else {
         const tasksInStatus = tasks.filter(t => t.status === (taskData.status || newTaskStatus));
         const maxPosition = Math.max(0, ...tasksInStatus.map(t => t.position));
         taskData.position = maxPosition + 1;
@@ -166,12 +182,6 @@ export function BoardPage() {
     }
   };
 
-  const handleCommentCountUpdate = (taskId: string, count: number) => {
-      setTasks(prevTasks => prevTasks.map(t => 
-        t.id === taskId ? { ...t, commentCount: count } : t
-      ));
-  };
-
   if (loading) {
     return <KanbanSkeleton />;
   }
@@ -179,13 +189,14 @@ export function BoardPage() {
   return (
     <>
       <KanbanBoard 
-        tasks={[...tasks].sort((a,b) => a.position - b.position)} // FIX: Create a shallow copy before sorting to prevent mutation
+        tasks={[...tasks].sort((a,b) => a.position - b.position)} 
         onAddTask={handleAddTask}
         onTaskClick={handleTaskClick}
         onTaskMove={handleTaskMove}
         onMoveCard={handleMoveCard}
       />
 
+      {/* SOLUÇÃO: A propriedade onCommentCountUpdate foi removida */}
       <TaskModal
         task={selectedTask}
         isOpen={isModalOpen}
@@ -196,7 +207,6 @@ export function BoardPage() {
         }}
         onSave={handleSaveTask}
         onDelete={handleDeleteTask}
-        onCommentCountUpdate={handleCommentCountUpdate}
       />
     </>
   );
