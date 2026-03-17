@@ -1,0 +1,70 @@
+=====================================================================
+ROTEIRO DE APRESENTAÇÃO - MINI-KANBAN FULLSTACK
+=====================================================================
+
+1. INTRODUÇÃO (O Pitch)
+---------------------------------------------------------------------
+"Olá! Vou apresentar o Mini-Kanban, uma plataforma Fullstack que 
+desenvolvi para gerenciamento de tarefas. O objetivo foi criar uma 
+ferramenta performática, segura e com uma experiência de usuário 
+fluida, utilizando tecnologias modernas como NestJS, React e Docker."
+
+2. VISÃO GERAL DA ARQUITETURA
+---------------------------------------------------------------------
+- Monorepo: Explique que o projeto é dividido em '/api' (Cérebro) 
+  e '/web' (Interface).
+- Tecnologias: NestJS (Node.js), React 18, Tailwind CSS, PostgreSQL 
+  e Prisma ORM.
+- Containerização: Tudo roda via Docker Compose, garantindo que o 
+  ambiente seja idêntico em qualquer máquina.
+
+3. DESTAQUES DO BACKEND (Onde você brilha)
+---------------------------------------------------------------------
+- Estrutura Modular: Mostre como o NestJS organiza o código em 
+  módulos (Auth, Tasks, Users), facilitando a manutenção.
+- Segurança (JWT): Explique que as rotas são protegidas por tokens 
+  JSON Web, validados via Passport Strategy.
+- Reset de Senha Seguro: Mencione que você gera um token aleatório, 
+  mas no banco você salva apenas o HASH (SHA-256). "Mesmo se o banco 
+  for vazado, os tokens de recuperação estão protegidos."
+- Prisma ORM: Destaque a facilidade de lidar com o PostgreSQL usando 
+  tipagem forte.
+
+4. DESTAQUES DO FRONTEND (UX e Performance)
+---------------------------------------------------------------------
+- Interface Moderna: Uso de Shadcn/UI e Tailwind para um design 
+  limpo e Dark Mode.
+- Gerenciamento de Estado: Uso de Hooks (useState, useEffect, useMemo) 
+  para manter a UI sincronizada.
+- Skeletons: Uso de telas de carregamento para uma percepção de 
+  velocidade maior (UX).
+
+5. O "PULO DO GATO" - REORDENAÇÃO DINÂMICA
+---------------------------------------------------------------------
+Este é o ponto mais forte. Se perguntarem sobre o Drag and Drop:
+- "Eu não uso índices simples (0, 1, 2) para a ordem. Implementei 
+  uma lógica de POSIÇÃO FRACIONÁRIA. Quando movo um card, calculo 
+  a média entre a posição do card de cima e o de baixo. Isso me 
+  permite reordenar itens no banco de dados atualizando APENAS UM 
+  registro, em vez de reindexar a lista inteira. É muito mais 
+  escalável."
+
+6. DESAFIOS E SOLUÇÕES
+---------------------------------------------------------------------
+- Docker: "Um desafio foi configurar o contexto de build para que 
+  as imagens fossem leves, usando o .dockerignore para não enviar 
+  pastas desnecessárias como a node_modules local."
+- Prisma no Docker: "Ajustei o fluxo de inicialização para usar 
+  'db push' de forma automatizada, agilizando o setup inicial do banco."
+
+7. PRÓXIMOS PASSOS (Visão de Produto)
+---------------------------------------------------------------------
+- "O projeto já tem a estrutura de Equipes no Front. O próximo 
+  passo técnico seria migrar essa lógica para o Backend, 
+  implementando controle de acesso baseado em cargos (RBAC)."
+
+=====================================================================
+DICA: Compartilhe a tela, mostre o Kanban funcionando e, se pedirem 
+para ver o código, vá direto no 'tasks.service.ts' (Backend) ou 
+'BoardPage.tsx' (Frontend). Boa sorte!
+=====================================================================
