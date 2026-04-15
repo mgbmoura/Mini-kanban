@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+pnpm-debug.log
+.git
+.gitignore
+.next
+.vscode
+.idx
+dist
+build
+.env
+api/node_modules
+api/dist
+web/node_modules
+web/dist
+web/build
+src

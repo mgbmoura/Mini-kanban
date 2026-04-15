@@ -1,44 +1,40 @@
-# To learn more about how to use Nix to configure your environment
-# see: https://firebase.google.com/docs/studio/customize-workspace
-{pkgs}: {
-  # Which nixpkgs channel to use.
-  channel = "stable-24.11"; # or "unstable"
-  # Use https://search.nixos.org/packages to find packages
+{ pkgs, ... }: {
+  channel = "unstable"; 
+
   packages = [
     pkgs.nodejs_20
-    pkgs.zulu
+    pkgs.nodePackages.pnpm
+    pkgs.docker
+    pkgs.docker-compose
+    pkgs.postgresql
+    pkgs.tree 
+    pkgs.sudo
   ];
-  # Sets environment variables in the workspace
-  env = {};
-  # This adds a file watcher to startup the firebase emulators. The emulators will only start if
-  # a firebase.json file is written into the user's directory
-  services.firebase.emulators = {
-    # Disabling because we are using prod backends right now
-    detect = false;
-    projectId = "demo-app";
-    services = ["auth" "firestore"];
-  };
+
+  services.docker.enable = true;
+
+  env = { };
+
   idx = {
-    # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      # "vscodevim.vim"
+      "google.gemini-cli-vscode-ide-companion"
     ];
-    workspace = {
-      onCreate = {
-        default.openFiles = [
-          "src/app/page.tsx"
-        ];
-      };
-    };
-    # Enable previews and customize configuration
+
+    # workspace = {
+    #   onCreate = {
+    #     api-install = "cd api && pnpm install";
+    #     web-install = "cd web && pnpm install";
+    #   };
+
+    #   onStart = {
+    #     # Apenas sobe os contentores existentes de forma leve, sem conflitos
+    #     start-containers = "docker-compose up -d"; 
+    #   };
+    # };
+
     previews = {
+      # Desligamos as previews complexas do IDX para deixar o Docker controlar tudo
       enable = true;
-      previews = {
-        web = {
-          command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
-          manager = "web";
-        };
-      };
     };
   };
 }
