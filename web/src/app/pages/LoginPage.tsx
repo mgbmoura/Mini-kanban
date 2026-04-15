@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 // Importa o componente Link do React Router
 import { Link } from 'react-router-dom';
 // Importa o serviço de autenticação com a sintaxe correta para exportação nomeada.
-import { authService } from '../../services/authService';
+import { authService } from '../../api/auth-api';
 // Importa o `toast` para exibir notificações.
 import { toast } from 'sonner';
 
@@ -78,10 +78,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setEmail('');
         setPassword('');
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido';
-      setError(message);
-      toast.error(message);
+    } catch (err: any) {
+      // Verifica se é um erro da API com status 401 (Não Autorizado)
+      if (err.response && err.response.status === 401) {
+        const message = 'Email ou senha inválidos.';
+        setError(message);
+        toast.error(message);
+      } else {
+        // Para outros erros, mantém o comportamento padrão
+        const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido';
+        setError(message);
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -120,7 +128,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               <div className="flex justify-between items-center mb-1.5">
                 <label htmlFor="password" className="block text-sm font-medium text-foreground">Senha</label>
                 {isLogin && (
-                  <Link to="/forgot-password" strokeWidth={2} className="text-sm font-medium text-primary hover:underline transition-all">
+                  <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline transition-all">
                     Esqueceu sua senha?
                   </Link>
                 )}
@@ -136,7 +144,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </button>
           </div>
         </div>
-        <div className="mt-8 text-center"><p className="text-xs text-muted-foreground opacity-60">Mini-Kanban © 2024 • Desafio Fullstack</p></div>
+        <div className="mt-8 text-center"><p className="text-xs text-muted-foreground opacity-60">Mini Kanban © 2026 • Desenvolvido por Marcelo Giulian</p></div>
       </div>
     </div>
   );

@@ -1,17 +1,18 @@
+
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DndProvider } from 'react-dnd';
 import { TestBackend } from 'react-dnd-test-backend';
 import { BoardPage } from './BoardPage';
-import taskService, { Task } from '../../services/taskService';
-import { authService } from '../../services/authService';
+import taskService, { Task } from '../../api/task-api';
+import { authService } from '../../api/auth-api';
 
 // Mocks for the services
-vi.mock('../../services/taskService');
-vi.mock('../../services/authService');
+vi.mock('../../api/task-api');
+vi.mock('../../api/auth-api');
 
 describe('BoardPage', () => {
-  const mockUser = { id: 'user-1', name: 'Test User', email: 'user@test.com' };
+  const mockUser = { id: 'user-1', name: 'Test User', email: 'user@test.com', avatarUrl: '' };
   let initialTasks: Task[];
 
   // Setup before each test
@@ -22,27 +23,31 @@ describe('BoardPage', () => {
     vi.clearAllMocks();
     window.confirm = vi.fn(() => true);
     vi.mocked(authService.getUser).mockReturnValue(mockUser);
-    vi.mocked(taskService.getTasks).mockResolvedValue([...initialTasks]);
+    vi.mocked(taskService.getTasks).mockResolvedValue({ data: [...initialTasks], status: 200, statusText: 'OK', headers: {}, config: {} as any });
 
     vi.mocked(taskService.createTask).mockImplementation(async (data) => {
       const created = { id: String(Date.now()), ...data } as Task;
       initialTasks.push(created);
-      vi.mocked(taskService.getTasks).mockResolvedValue([...initialTasks]);
-      return created;
+      vi.mocked(taskService.getTasks).mockResolvedValue({ data: [...initialTasks], status: 200, statusText: 'OK', headers: {}, config: {} as any });
+      return { data: created, status: 201, statusText: 'Created', headers: {}, config: {} as any };
     });
 
     vi.mocked(taskService.updateTask).mockImplementation(async (taskId, data) => {
       const taskIndex = initialTasks.findIndex(t => t.id === taskId);
-      if (taskIndex === -1) return initialTasks[0];
+      if (taskIndex === -1) {
+        // Retornando uma resposta mockada mesmo em caso de erro para manter a consistência do tipo
+        return { data: initialTasks[0], status: 200, statusText: 'OK', headers: {}, config: {} as any };
+      }
       const updatedTask = { ...initialTasks[taskIndex], ...data } as Task;
       initialTasks[taskIndex] = updatedTask;
-      vi.mocked(taskService.getTasks).mockResolvedValue([...initialTasks]);
-      return updatedTask;
+      vi.mocked(taskService.getTasks).mockResolvedValue({ data: [...initialTasks], status: 200, statusText: 'OK', headers: {}, config: {} as any });
+      return { data: updatedTask, status: 200, statusText: 'OK', headers: {}, config: {} as any };
     });
 
     vi.mocked(taskService.deleteTask).mockImplementation(async (taskId) => {
       initialTasks = initialTasks.filter(t => t.id !== taskId);
-      vi.mocked(taskService.getTasks).mockResolvedValue([...initialTasks]);
+      vi.mocked(taskService.getTasks).mockResolvedValue({ data: [...initialTasks], status: 200, statusText: 'OK', headers: {}, config: {} as any });
+      return { data: undefined, status: 204, statusText: 'No Content', headers: {}, config: {} as any };
     });
   });
 

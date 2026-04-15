@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { authService } from '../../services/authService';
+import { authService } from '../../api/auth-api';
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();

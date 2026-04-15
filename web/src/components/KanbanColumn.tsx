@@ -1,6 +1,6 @@
 
 import { Droppable } from "react-beautiful-dnd";
-import { Task, TaskStatus } from "../services/taskService";
+import { Task, TaskStatus } from "../api/task-api";
 import { KanbanCard } from "./KanbanCard";
 import { Plus } from "lucide-react";
 

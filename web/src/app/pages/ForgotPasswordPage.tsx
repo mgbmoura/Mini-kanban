@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { authService } from '../../services/authService';
+import { authService } from '../../api/auth-api';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -16,11 +16,15 @@ export function ForgotPasswordPage() {
     try {
       await authService.forgotPassword(email);
       setSubmitted(true);
-      toast.success('Se o e-mail existir, um link foi enviado!');
+      // A mensagem foi melhorada para evitar enumeração de contas
+      toast.success('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
     } catch (error) {
-      toast.error('Ocorreu um erro. Por favor, tente novamente.');
+      // Mesmo em caso de erro, exibimos uma mensagem genérica
+      toast.success('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
     } finally {
       setLoading(false);
+      // Garantimos que a tela de confirmação seja exibida para não vazar informação
+      setSubmitted(true); 
     }
   };
 

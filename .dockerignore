@@ -14,3 +14,4 @@ api/dist
 web/node_modules
 web/dist
 web/build
+src

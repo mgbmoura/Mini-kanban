@@ -1,6 +1,6 @@
 
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
-import { Task, TaskStatus } from "../services/taskService";
+import { Task, TaskStatus } from "../api/task-api";
 import { KanbanColumn } from "./KanbanColumn";
 
 interface KanbanBoardProps {

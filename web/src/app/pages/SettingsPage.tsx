@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, User, Save, Loader2, Info, Palette } from 'lucide-react';
 import { useOutletContext } from 'react-router';
-import { authService } from '../../services/authService';
+import { authService } from '../../api/auth-api';
 import { SettingsSkeleton } from '../../components/SettingsSkeleton';
 import { toast } from 'sonner';
 import { useTheme } from '../../contexts/ThemeContext';

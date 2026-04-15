@@ -1,6 +1,6 @@
 
 import { Draggable } from "react-beautiful-dnd";
-import { Task } from "../services/taskService";
+import { Task } from "../api/task-api";
 import { Paperclip, MessageSquare } from "lucide-react";
 
 interface KanbanCardProps {

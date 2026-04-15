@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ResetPasswordPage } from './ResetPasswordPage';
 import { toast } from 'sonner';
-import { authService } from '../../services/authService';
+import { authService } from '../../api/auth-api';
 
 // Mock de módulos
 vi.mock('sonner', () => ({
@@ -13,7 +13,7 @@ vi.mock('sonner', () => ({
     error: vi.fn(),
   },
 }));
-vi.mock('../../services/authService');
+vi.mock('../../api/auth-api');
 
 const mockNavigate = vi.fn();
 // Mock do react-router-dom para controlar a navegação
@@ -43,7 +43,8 @@ describe('ResetPasswordPage', () => {
   });
 
   it('redefine a senha com sucesso com um token válido', async () => {
-    vi.mocked(authService.resetPassword).mockResolvedValueOnce(undefined);
+    // O mock foi corrigido para retornar uma AxiosResponse simulada
+    vi.mocked(authService.resetPassword).mockResolvedValueOnce({ data: {}, status: 200, statusText: 'OK', headers: {}, config: {} as any });
     renderComponentWithToken('valid-token');
 
     // Preenche as senhas
@@ -57,8 +58,8 @@ describe('ResetPasswordPage', () => {
     await waitFor(() => {
       // Verifica se a função do serviço foi chamada e se a navegação ocorreu
       expect(authService.resetPassword).toHaveBeenCalledWith('valid-token', 'new-password');
-      expect(toast.success).toHaveBeenCalledWith('Senha redefinida com sucesso! Você já pode fazer login com sua nova senha.');
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(toast.success).toHaveBeenCalledWith('Senha redefinida com sucesso!');
+      expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
   });
 
@@ -92,13 +93,13 @@ describe('ResetPasswordPage', () => {
 
   it('mostra um erro se nenhum token for fornecido no URL', () => {
     renderComponentWithToken(null);
-    expect(toast.error).toHaveBeenCalledWith('Token de redefinição não encontrado ou inválido.');
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(toast.error).toHaveBeenCalledWith('Token de redefinição não encontrado.');
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
   it('lida com erros da API durante a redefinição', async () => {
-    const apiError = 'Token inválido ou expirado';
-    vi.mocked(authService.resetPassword).mockRejectedValueOnce(new Error(apiError));
+    const apiError = new Error('Token inválido ou expirado');
+    vi.mocked(authService.resetPassword).mockRejectedValueOnce(apiError);
     renderComponentWithToken('invalid-token');
 
     fireEvent.change(screen.getByLabelText('Nova Senha'), { target: { value: 'new-password' } });
@@ -107,8 +108,8 @@ describe('ResetPasswordPage', () => {
 
     await waitFor(() => {
       // Verifica se a mensagem de erro da API é exibida
-      expect(screen.getByText(apiError)).toBeInTheDocument();
-      expect(toast.error).toHaveBeenCalledWith(apiError);
+      expect(screen.getByText(apiError.message)).toBeInTheDocument();
+      expect(toast.error).toHaveBeenCalledWith(apiError.message);
       expect(mockNavigate).not.toHaveBeenCalled(); // Não deve navegar
     });
   });

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, UserPlus } from 'lucide-react';
-import { teamService, TeamMember } from '../../services/teamService';
+import { teamApi, TeamMember } from '../../api/team-api';
 import { TeamSkeleton } from '../../components/TeamSkeleton';
 import { InviteMemberModal } from '../../components/InviteMemberModal';
 
@@ -14,7 +14,7 @@ export function TeamPage() {
     const loadTeam = async () => {
       try {
         setLoading(true);
-        const members = await teamService.getTeamMembers();
+        const members = await teamApi.getTeamMembers();
         setTeamMembers(members);
       } catch (err) {
         setError('Falha ao carregar a equipe.');
@@ -28,7 +28,7 @@ export function TeamPage() {
 
   const handleInviteMember = async (email: string) => {
     try {
-      const newMember = await teamService.inviteMember(email);
+      const newMember = await teamApi.inviteMember(email);
       setTeamMembers(currentMembers => [...currentMembers, newMember]);
     } catch (err: any) {
       // O erro será exibido no modal, mas também o passamos para cima caso seja necessário.

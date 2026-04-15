@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import App from './App';
 
 // Mock the authService to control the authentication status
-vi.mock('../services/authService', () => ({
+vi.mock('../api/auth-api', () => ({
   authService: {
     getUser: () => null, // Simulate no user logged in
     logout: vi.fn(),

@@ -1,8 +1,10 @@
+
 import axios from 'axios';
 
-// Usamos caminho relativo para que o Nginx trate o proxy internamente no Docker
-// ou o Vite trate no ambiente local de desenvolvimento através do proxy configurado.
-// Isso evita erros de CORS e redirecionamentos de autenticação em Workstations.
+/**
+ * API: Configuração base do Axios.
+ * Centraliza a URL base e os interceptors de Token.
+ */
 const api = axios.create({
     baseURL: '/api'
 });
@@ -15,9 +17,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;

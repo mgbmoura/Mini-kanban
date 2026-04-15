@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import { toast } from 'sonner';
-import { authService } from '../../services/authService';
+import { authService } from '../../api/auth-api';
 
 // Mock de módulos
 vi.mock('sonner', () => ({
@@ -14,14 +14,14 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('../../services/authService');
+vi.mock('../../api/auth-api');
 
 // Componente auxiliar para renderizar a LoginPage com o router
 const renderLoginPage = () => {
   return render(
     <MemoryRouter initialEntries={['/']}>
       <Routes>
-        <Route path="/" element={<LoginPage onLogin={() => {}} />} />
+        <Route path="/" element={<LoginPage onLogin={() => { }} />} />
         <Route path="/forgot-password" element={<div>Página de redefinição de senha</div>} />
       </Routes>
     </MemoryRouter>
@@ -50,7 +50,7 @@ describe('LoginPage', () => {
   });
 
   it('realiza o registro com sucesso', async () => {
-    vi.mocked(authService.register).mockResolvedValueOnce(undefined);
+    vi.mocked(authService.register).mockResolvedValueOnce({ data: {}, status: 201, statusText: 'Created', headers: {}, config: {} as any });
     renderLoginPage();
 
     // Muda para o modo de registro
@@ -104,7 +104,7 @@ describe('LoginPage', () => {
 
     // Verifica se a navegação ocorreu
     await waitFor(() => {
-        expect(screen.getByText('Página de redefinição de senha')).toBeInTheDocument();
+      expect(screen.getByText('Página de redefinição de senha')).toBeInTheDocument();
     });
   });
 });

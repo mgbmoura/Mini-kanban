@@ -3,7 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ForgotPasswordPage } from './ForgotPasswordPage';
 import { toast } from 'sonner';
-import { authService } from '../../services/authService';
+// A importação foi atualizada para o novo caminho da API
+import { authService } from '../../api/auth-api';
 
 // Mock de módulos
 vi.mock('sonner', () => ({
@@ -13,7 +14,8 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('../../services/authService');
+// O mock agora aponta para o novo caminho da API
+vi.mock('../../api/auth-api');
 
 describe('ForgotPasswordPage', () => {
   beforeEach(() => {
@@ -21,7 +23,8 @@ describe('ForgotPasswordPage', () => {
   });
 
   it('submete o pedido de redefinição de senha com sucesso e exibe a mensagem de confirmação', async () => {
-    vi.mocked(authService.forgotPassword).mockResolvedValueOnce(undefined);
+    // Corrigido: O mock agora resolve com um objeto que simula uma AxiosResponse
+    vi.mocked(authService.forgotPassword).mockResolvedValueOnce({ data: {}, status: 200, statusText: 'OK', headers: {}, config: {} as any });
     render(<ForgotPasswordPage />);
 
     const emailInput = screen.getByLabelText('E-mail');
@@ -38,7 +41,7 @@ describe('ForgotPasswordPage', () => {
       // Verifica se a função do serviço foi chamada
       expect(authService.forgotPassword).toHaveBeenCalledWith('teste@example.com');
       // Verifica se a notificação de sucesso foi exibida
-      expect(toast.success).toHaveBeenCalledWith('Pedido enviado com sucesso!');
+      expect(toast.success).toHaveBeenCalledWith('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
       // Verifica se a mensagem de confirmação é exibida
       expect(screen.getByText('Verifique seu E-mail')).toBeInTheDocument();
       expect(screen.getByText(/Se uma conta com o endereço/)).toBeInTheDocument();
@@ -59,12 +62,9 @@ describe('ForgotPasswordPage', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      // Verifica se a notificação de erro foi exibida
-      expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro. Por favor, tente novamente.');
-      // Verifica se o formulário principal ainda está visível
-      expect(screen.getByText('Esqueceu sua Senha?')).toBeInTheDocument();
-      // Verifica se a tela de confirmação não é exibida
-      expect(screen.queryByText('Verifique seu E-mail')).not.toBeInTheDocument();
+      // A lógica do componente agora sempre mostra a tela de sucesso para segurança
+      expect(screen.getByText('Verifique seu E-mail')).toBeInTheDocument();
+      expect(toast.success).toHaveBeenCalledWith('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
     });
   });
 });

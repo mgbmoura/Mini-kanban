@@ -1,5 +1,9 @@
-import api from './api';
 
+import api from './axios-config';
+
+/**
+ * TIPAGEM: Define o formato de um Comentário.
+ */
 export interface Comment {
   id: string;
   content: string;
@@ -10,27 +14,24 @@ export interface Comment {
   taskId: string;
 }
 
-export interface CreateCommentDTO {
-  content: string;
-}
-
-export const commentService = {
-  // GET /tasks/:taskId/comments - Lista comentários de uma task
+/**
+ * API SERVICE: Comments
+ * Gerencia o envio e exclusão de comentários em tarefas específicas.
+ */
+export const commentApi = {
+  // Busca todos os comentários vinculados a uma tarefa (taskId)
   async getComments(taskId: string): Promise<Comment[]> {
     const response = await api.get(`/tasks/${taskId}/comments`);
     return response.data;
   },
 
-  // POST /tasks/:taskId/comments - Cria um comentário
-  async createComment(
-    taskId: string,
-    content: string
-  ): Promise<Comment> {
+  // Envia um novo comentário para uma tarefa
+  async createComment(taskId: string, content: string): Promise<Comment> {
     const response = await api.post(`/tasks/${taskId}/comments`, { content });
     return response.data;
   },
 
-  // DELETE /comments/:id - Deleta um comentário
+  // Remove um comentário (apenas o dono pode fazer isso, validado no backend)
   async deleteComment(commentId: string): Promise<void> {
     await api.delete(`/comments/${commentId}`);
   },

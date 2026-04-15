@@ -8,11 +8,6 @@ import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module'; 
 import { CommentsModule } from './comments/comments.module';
 
-/**
- * AppModule: O ponto central da aplicação.
- * Cada módulo (Auth, Tasks, Users, etc.) é independente e encapsulado,
- * seguindo os princípios de alta coesão e baixo acoplamento.
- */
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
