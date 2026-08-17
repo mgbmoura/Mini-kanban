@@ -9,10 +9,6 @@ import { BoardPage } from '../app/pages/BoardPage';
 import { SettingsPage } from '../app/pages/SettingsPage';
 import { LoginSkeleton } from '../components/LoginSkeleton';
 
-/**
- * ROUTES: Definição centralizada de navegação.
- * Aqui você decide quem pode ver o quê (Guardas de Rota).
- */
 export function createAppRouter(
   user: User | null, 
   loading: boolean, 

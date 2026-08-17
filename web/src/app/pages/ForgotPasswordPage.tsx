@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
 import { authService } from '../../api/auth-api';
+
+const inputClassName = 'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground bg-background text-foreground border-input flex h-11 w-full min-w-0 rounded-md border px-3 py-2 text-sm transition-[color,box-shadow,border-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:opacity-50 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive';
+const buttonClassName = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] bg-primary text-primary-foreground hover:bg-primary/90 w-full h-11 px-4 py-2 shadow-md active:scale-[0.98]';
+const linkButtonClassName = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] border bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 mt-8 w-full h-9 px-4 py-2';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -16,15 +18,12 @@ export function ForgotPasswordPage() {
     try {
       await authService.forgotPassword(email);
       setSubmitted(true);
-      // A mensagem foi melhorada para evitar enumeração de contas
       toast.success('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
     } catch (error) {
-      // Mesmo em caso de erro, exibimos uma mensagem genérica
       toast.success('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
     } finally {
       setLoading(false);
-      // Garantimos que a tela de confirmação seja exibida para não vazar informação
-      setSubmitted(true); 
+      setSubmitted(true);
     }
   };
 
@@ -40,9 +39,7 @@ export function ForgotPasswordPage() {
                 Se uma conta com o endereço <strong>{email}</strong> existir, 
                 um link para redefinição foi enviado.
             </p>
-            <Button variant="outline" asChild className="mt-8 w-full">
-              <Link to="/login">Voltar para o login</Link>
-            </Button>
+            <Link to="/login" className={linkButtonClassName}>Voltar para o login</Link>
         </div>
       </div>
     );
@@ -64,19 +61,19 @@ export function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">E-mail</label>
-              <Input
+              <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 required
-                className="bg-background h-11"
+                className={inputClassName}
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full h-11 shadow-md active:scale-[0.98]">
+            <button type="submit" disabled={loading} className={buttonClassName}>
               {loading ? 'Enviando...' : 'Enviar Link de Redefinição'}
-            </Button>
+            </button>
             <div className="text-center pt-2">
               <Link to="/login" className="text-sm font-medium text-primary hover:underline">
                 Lembrou a senha? Faça login

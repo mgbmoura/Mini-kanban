@@ -54,7 +54,6 @@ export function KanbanCard({ task, index, onClick }: KanbanCardProps) {
               {task.attachmentImage && <Paperclip className="w-4 h-4" />}
               <div className="flex items-center gap-1">
                 <MessageSquare className="w-4 h-4" />
-                {/* Corrigido para usar a nova propriedade commentCount */}
                 <span>{task.commentCount || 0}</span>
               </div>
             </div>

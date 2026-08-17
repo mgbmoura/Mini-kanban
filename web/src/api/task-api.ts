@@ -1,9 +1,6 @@
 
 import api from './axios-config';
 
-/**
- * TIPAGEM: Define o formato de uma Tarefa (Task) no sistema.
- */
 export interface Task {
   id: string;
   title: string;
@@ -31,40 +28,31 @@ export interface CreateTaskDTO {
   position?: number;
 }
 
-/**
- * API SERVICE: Tasks
- * Centraliza todas as operações de banco de dados relacionadas a tarefas.
- */
+type TaskApiResponse = Omit<Task, 'commentCount'> & {
+  _count?: { comments?: number };
+};
+
+function mapTask(task: TaskApiResponse): Task {
+  const { _count, ...data } = task;
+  return { ...data, commentCount: _count?.comments ?? 0 };
+}
+
 export const taskApi = {
-  // Lista todas as tarefas do usuário logado
   async getTasks(): Promise<Task[]> {
     const response = await api.get('/tasks');
-    // Mapeamos a resposta para facilitar o acesso à contagem de comentários
-    return response.data.map((task: any) => ({
-      ...task,
-      commentCount: task._count?.comments || 0,
-    }));
+    return response.data.map(mapTask);
   },
 
-  // Cria uma nova tarefa
-  async createTask(data: Partial<CreateTaskDTO>): Promise<Task> {
+  async createTask(data: CreateTaskDTO): Promise<Task> {
     const response = await api.post('/tasks', data);
-    return {
-      ...response.data,
-      commentCount: response.data._count?.comments || 0,
-    };
+    return mapTask(response.data);
   },
 
-  // Atualiza uma tarefa existente (título, status, posição, etc.)
   async updateTask(id: string, data: Partial<CreateTaskDTO>): Promise<Task> {
     const response = await api.patch(`/tasks/${id}`, data);
-    return {
-      ...response.data,
-      commentCount: response.data._count?.comments || 0,
-    };
+    return mapTask(response.data);
   },
 
-  // Remove uma tarefa permanentemente
   async deleteTask(id: string): Promise<void> {
     await api.delete(`/tasks/${id}`);
   },

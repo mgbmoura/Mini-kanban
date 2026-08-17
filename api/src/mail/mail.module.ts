@@ -23,7 +23,7 @@ import { join } from 'path';
           from: `'Mini Kanban' <${config.get('MAIL_FROM')}>`,
         },
         template: {
-          dir: join(process.cwd(), 'dist', 'mail', 'templates'), // Caminho corrigido
+          dir: join(process.cwd(), 'dist', 'mail', 'templates'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,

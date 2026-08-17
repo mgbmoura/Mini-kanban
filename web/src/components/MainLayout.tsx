@@ -23,14 +23,12 @@ export function MainLayout({ user, onLogout, onProfileUpdate }: MainLayoutProps)
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onLogout={onLogout} // Corrigido: Passa a função de logout correta para a sidebar
+        onLogout={onLogout}
         user={user}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Corrigido: O Header não precisa da função onLogout */}
         <Header onMenuClick={() => setSidebarOpen(true)} user={user} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
-          {/* Passa a função onProfileUpdate através do contexto da Outlet */}
           <Outlet context={{ onProfileUpdate }} />
         </main>
       </div>

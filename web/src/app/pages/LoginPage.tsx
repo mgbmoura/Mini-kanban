@@ -1,59 +1,42 @@
 
-// Importa o React e os hooks `useState` e `useEffect`.
 import React, { useState, useEffect } from 'react';
-// Importa o componente Link do React Router
 import { Link } from 'react-router-dom';
-// Importa o serviço de autenticação com a sintaxe correta para exportação nomeada.
+import axios from 'axios';
 import { authService } from '../../api/auth-api';
-// Importa o `toast` para exibir notificações.
 import { toast } from 'sonner';
 
-// Define as propriedades que o componente LoginPage espera receber.
 interface LoginPageProps {
-  onLogin: () => void; // Callback a ser chamado após um login bem-sucedido.
+  onLogin: () => void;
 }
 
-// Função utilitária para obter o modo ('login' or 'register') a partir dos parâmetros da URL.
 const getModeFromURL = () => {
   const params = new URLSearchParams(window.location.search);
   return params.get('mode') === 'register' ? 'register' : 'login';
 };
 
-/**
- * Componente LoginPage
- * 
- * Gerencia tanto a tela de login quanto a de registro.
- */
 export default function LoginPage({ onLogin }: LoginPageProps) {
-  // Estado para controlar se o formulário está em modo 'login' ou 'register'.
   const [mode, setMode] = useState(getModeFromURL());
-  // Estados para os campos do formulário.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  // Estado para mensagens de erro.
   const [error, setError] = useState('');
-  // Estado para controlar o carregamento durante as submissões.
   const [loading, setLoading] = useState(false);
 
-  // Efeito para lidar com os botões de avançar/voltar do navegador.
   useEffect(() => {
     const handlePopState = () => setMode(getModeFromURL());
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Função para alternar entre as visualizações de login e registro, atualizando o URL.
   const setView = (newMode: 'login' | 'register') => {
     const url = newMode === 'register' ? '/?mode=register' : '/';
     if (window.location.pathname + window.location.search !== url) {
       window.history.pushState({ mode: newMode }, '', url);
     }
     setMode(newMode);
-    setError(''); // Limpa erros ao alternar.
+    setError('');
   };
 
-  // Lida com a submissão do formulário.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -78,14 +61,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setEmail('');
         setPassword('');
       }
-    } catch (err: any) {
-      // Verifica se é um erro da API com status 401 (Não Autorizado)
-      if (err.response && err.response.status === 401) {
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
         const message = 'Email ou senha inválidos.';
         setError(message);
         toast.error(message);
       } else {
-        // Para outros erros, mantém o comportamento padrão
         const message = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido';
         setError(message);
         toast.error(message);

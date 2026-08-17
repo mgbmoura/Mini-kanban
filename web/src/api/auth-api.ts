@@ -4,10 +4,6 @@ import api from './axios-config';
 
 const USER_STORAGE_KEY = 'mini-kanban-user';
 
-/**
- * API SERVICE: Auth
- * Funções que fazem as chamadas HTTP para o backend.
- */
 export const authService = {
   async login(credentials: { email: string; password:string }): Promise<User> {
     const response = await api.post('/auth/login', credentials);

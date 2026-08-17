@@ -1,4 +1,4 @@
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from '../Skeleton';
 import { Settings as SettingsIcon } from 'lucide-react';
 
 export function SettingsSkeleton() {

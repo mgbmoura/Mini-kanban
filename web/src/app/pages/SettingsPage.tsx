@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, User, Save, Loader2, Info, Palette } from 'lucide-react';
-import { useOutletContext } from 'react-router';
+import { useOutletContext } from 'react-router-dom';
 import { authService } from '../../api/auth-api';
 import { SettingsSkeleton } from '../../components/SettingsSkeleton';
 import { toast } from 'sonner';
@@ -47,7 +47,7 @@ export function SettingsPage() {
       if (onProfileUpdate) onProfileUpdate();
       
       toast.success('Perfil atualizado com sucesso!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro:', error);
       toast.error('Erro ao salvar perfil.');
     } finally {

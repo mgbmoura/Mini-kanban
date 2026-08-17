@@ -1,20 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import App from './App';
+import { ThemeProvider } from '../contexts/ThemeContext';
 
-// Mock the authService to control the authentication status
 vi.mock('../api/auth-api', () => ({
   authService: {
-    getUser: () => null, // Simulate no user logged in
+    getUser: () => null,
     logout: vi.fn(),
   },
 }));
 
 describe('App', () => {
-  it('renders the login page when no user is authenticated', () => {
-    render(<App />);
+  it('renders the login page when no user is authenticated', async () => {
+    render(
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    );
 
-    // Check if the login page content is present
-    expect(screen.getByText('Entre na sua conta para continuar')).toBeInTheDocument();
+    expect(await screen.findByText('Entre na sua conta para continuar')).toBeInTheDocument();
   });
 });

@@ -1,12 +1,8 @@
 
 import axios from 'axios';
 
-/**
- * API: Configuração base do Axios.
- * Centraliza a URL base e os interceptors de Token.
- */
 const api = axios.create({
-    baseURL: '/api'
+  baseURL: '/api'
 });
 
 api.interceptors.request.use(

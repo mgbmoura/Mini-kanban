@@ -5,9 +5,17 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CommentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(taskId: string, userId: string, content: string) {
-    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+  private async ensureTaskOwner(taskId: string, userId: string) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, userId },
+      select: { id: true },
+    });
+
     if (!task) throw new NotFoundException('Tarefa não encontrada');
+  }
+
+  async create(taskId: string, userId: string, content: string) {
+    await this.ensureTaskOwner(taskId, userId);
 
     const comment = await this.prisma.comment.create({
       data: {
@@ -33,7 +41,9 @@ export class CommentsService {
     };
   }
 
-  async findAllByTask(taskId: string) {
+  async findAllByTask(taskId: string, userId: string) {
+    await this.ensureTaskOwner(taskId, userId);
+
     const comments = await this.prisma.comment.findMany({
       where: { taskId },
       include: {

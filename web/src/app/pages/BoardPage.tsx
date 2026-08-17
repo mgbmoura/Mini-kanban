@@ -5,6 +5,16 @@ import { useState, useEffect } from 'react';
 import { taskApi, Task, TaskStatus } from '../../api/task-api';
 import { KanbanSkeleton } from '../../components/KanbanSkeleton';
 
+function getPosition(tasks: Task[], destinationIndex: number) {
+  const previous = tasks[destinationIndex - 1];
+  const next = tasks[destinationIndex];
+
+  if (!previous && next) return next.position / 2;
+  if (previous && !next) return previous.position + 1;
+  if (previous && next) return (previous.position + next.position) / 2;
+  return 1;
+}
+
 export function BoardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,14 +27,13 @@ export function BoardPage() {
   }, []);
 
   const loadTasks = async () => {
-    // Não precisa de setLoading(true) aqui para evitar piscar a tela em reloads
     try {
       const userTasks = await taskApi.getTasks();
       setTasks(userTasks);
     } catch (error) {
       console.error('Erro ao carregar tasks:', error);
     } finally {
-      if (loading) setLoading(false); // Só desativa o skeleton inicial uma vez
+      setLoading(false);
     }
   };
 
@@ -41,70 +50,48 @@ export function BoardPage() {
 
   const handleTaskMove = async (taskId: string, newStatus: TaskStatus, destinationIndex: number) => {
     const originalTasks = [...tasks];
-    const movedTask = tasks.find(t => t.id === taskId);
+    const movedTask = tasks.find(task => task.id === taskId);
     if (!movedTask) return;
 
-    const tasksInNewColumn = originalTasks
-        .filter(t => t.status === newStatus)
-        .sort((a, b) => a.position - b.position);
+    const destinationTasks = originalTasks
+      .filter(task => task.status === newStatus && task.id !== taskId)
+      .sort((a, b) => a.position - b.position);
+    const newPosition = getPosition(destinationTasks, destinationIndex);
 
-    const taskBefore = tasksInNewColumn[destinationIndex - 1];
-    const taskAfter = tasksInNewColumn[destinationIndex];
-
-    let newPosition;
-    if (!taskBefore && taskAfter) { newPosition = taskAfter.position / 2; } 
-    else if (taskBefore && !taskAfter) { newPosition = taskBefore.position + 1; } 
-    else if (taskBefore && taskAfter) { newPosition = (taskBefore.position + taskAfter.position) / 2; }
-    else { newPosition = 1; }
-
-    const optimisticState = originalTasks.map(task =>
+    setTasks(originalTasks.map(task =>
       task.id === taskId ? { ...task, status: newStatus, position: newPosition } : task
-    );
-    setTasks(optimisticState);
+    ));
 
     try {
       await taskApi.updateTask(taskId, { status: newStatus, position: newPosition });
-      // Não precisa recarregar aqui, a atualização otimista já foi suficiente
     } catch (error) {
       setTasks(originalTasks);
-      alert("Ocorreu um erro ao mover a tarefa.");
-    }
-  };
-
-  const handleMoveCard = async (dragIndex: number, hoverIndex: number, dragStatus: TaskStatus) => {
-    const originalTasks = [...tasks];
-    const tasksInColumn = tasks.filter(task => task.status === dragStatus).sort((a, b) => a.position - b.position);
-    const [draggedItem] = tasksInColumn.splice(dragIndex, 1);
-    tasksInColumn.splice(hoverIndex, 0, draggedItem);
-
-    const taskBefore = tasksInColumn[hoverIndex - 1];
-    const taskAfter = tasksInColumn[hoverIndex + 1];
-
-    let newPosition;
-    if (!taskBefore && taskAfter) { newPosition = taskAfter.position / 2; } 
-    else if (taskBefore && !taskAfter) { newPosition = taskBefore.position + 1; } 
-    else if (taskBefore && taskAfter) { newPosition = (taskBefore.position + taskAfter.position) / 2; } 
-    else { newPosition = 1; }
-    
-    setTasks(originalTasks.map(t => t.id === draggedItem.id ? { ...t, position: newPosition } : t));
-
-    try {
-      await taskApi.updateTask(draggedItem.id, { position: newPosition });
-    } catch (error) {
-      setTasks(originalTasks);
+      alert('Ocorreu um erro ao mover a tarefa.');
     }
   };
 
   const handleSaveTask = async (taskData: Partial<Task>) => {
     try {
-      if (taskData.id) {
-        await taskApi.updateTask(taskData.id, taskData);
+      const { id, ...data } = taskData;
+
+      if (id) {
+        await taskApi.updateTask(id, data);
       } else {
-        const tasksInStatus = tasks.filter(t => t.status === (taskData.status || newTaskStatus));
-        const maxPosition = Math.max(0, ...tasksInStatus.map(t => t.position));
-        await taskApi.createTask({ ...taskData, position: maxPosition + 1 });
+        const status = data.status ?? newTaskStatus;
+        const tasksInStatus = tasks.filter(task => task.status === status);
+        const maxPosition = Math.max(0, ...tasksInStatus.map(task => task.position));
+
+        await taskApi.createTask({
+          title: data.title ?? '',
+          description: data.description,
+          status,
+          priority: data.priority,
+          tags: data.tags,
+          attachmentImage: data.attachmentImage,
+          position: maxPosition + 1,
+        });
       }
-      // Após salvar, fecha o modal e recarrega TODAS as tarefas para garantir consistência
+
       setIsModalOpen(false);
       await loadTasks();
     } catch (error) {
@@ -115,7 +102,6 @@ export function BoardPage() {
   const handleDeleteTask = async (taskId: string) => {
     try {
       await taskApi.deleteTask(taskId);
-       // Após deletar, fecha o modal e recarrega TODAS as tarefas
       setIsModalOpen(false);
       await loadTasks();
     } catch (error) {
@@ -128,11 +114,10 @@ export function BoardPage() {
   return (
     <>
       <KanbanBoard 
-        tasks={[...tasks].sort((a,b) => a.position - b.position)} 
+        tasks={[...tasks].sort((a, b) => a.position - b.position)}
         onAddTask={handleAddTask}
         onTaskClick={handleTaskClick}
         onTaskMove={handleTaskMove}
-        onMoveCard={handleMoveCard}
       />
       <TaskModal
         task={selectedTask}

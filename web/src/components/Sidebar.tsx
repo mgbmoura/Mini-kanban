@@ -1,6 +1,6 @@
 
 import { LayoutDashboard, Settings, X, LogOut } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User } from '../types/user';
 
 interface NavItem {

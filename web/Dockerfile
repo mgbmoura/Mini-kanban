@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 # Copia arquivos de dependências
 COPY web/package.json web/pnpm-lock.yaml* ./
 
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copia o código do frontend
 COPY web/ .

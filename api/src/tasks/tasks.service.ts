@@ -1,12 +1,4 @@
 
-/**
- * ======================================================
- * CAMADA: SERVICE (O Cérebro / Lógica de Negócio)
- * ======================================================
- * Aqui é onde as regras do sistema são aplicadas.
- * O Service é o único que fala com o Banco de Dados (Prisma).
- * Ele garante, por exemplo, que um usuário não delete a task de outro.
- */
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -17,7 +9,6 @@ export class TasksService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateTaskDto, userId: string) {
-    // Cria a tarefa e já a vincula ao ID do usuário (Relation)
     return this.prisma.task.create({
       data: {
         ...data,
@@ -27,11 +18,10 @@ export class TasksService {
   }
 
   async findAll(userId: string) {
-    // Busca apenas as tarefas onde o userId coincide com o dono do token
     return this.prisma.task.findMany({
       where: { userId },
       include: {
-        _count: { select: { comments: true } }, // Traz a contagem de comentários junto
+        _count: { select: { comments: true } },
       },
       orderBy: { position: 'asc' },
     });
@@ -42,7 +32,6 @@ export class TasksService {
 
     if (!task) throw new NotFoundException('Tarefa não encontrada');
 
-    // SEGURANÇA: Verifica se o ID do usuário no banco é o mesmo que está tentando editar
     if (task.userId !== userId) throw new UnauthorizedException('Você não tem permissão para editar esta tarefa');
 
     return this.prisma.task.update({ where: { id }, data });

@@ -1,61 +1,90 @@
-# Projeto Fullstack Mini Kanban 
+# Mini Kanban
 
-Este projeto é uma aplicação full-stack completa que implementa um quadro Kanban interativo com autenticação de usuários, construído com foco em boas práticas de arquitetura, segurança e uma excelente experiência de desenvolvimento.
+Aplicação full stack para organizar tarefas em três etapas: a fazer, em andamento e concluído.
 
----
+## Funcionalidades
 
-## 🚀 Funcionalidades Principais
+- cadastro, login e recuperação de senha;
+- tarefas separadas por usuário;
+- criação, edição e exclusão de tarefas;
+- movimentação e reordenação de cards por arrastar e soltar;
+- prioridades, imagens e comentários;
+- perfil do usuário e tema claro/escuro;
+- documentação da API com Swagger.
 
-*   **Autenticação de Usuários:** Cadastro e Login seguros com JSON Web Tokens (JWT).
-*   **Gerenciamento de Tarefas (CRUD):** Usuários autenticados podem criar, listar, atualizar e excluir suas próprias tarefas.
-*   **Quadro Kanban Interativo:** Interface com colunas de status (TODO, DOING, DONE) e funcionalidade de arrastar e soltar (drag-and-drop) para alterar o status das tarefas.
-*   **Segurança de ponta a ponta:** Senhas criptografadas com `bcrypt` e uma camada de serviço que garante que um usuário **jamais** acesse os dados de outro.
-*   **Documentação de API:** Interface Swagger gerada automaticamente para explorar e testar os endpoints do backend.
+## Tecnologias
 
----
+| Camada | Tecnologias |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite e Tailwind CSS |
+| API | NestJS, Prisma, JWT e bcrypt |
+| Banco | PostgreSQL |
+| Ambiente | Docker Compose |
 
-## 🛠️ Tecnologias Utilizadas
+## Como executar
 
-| Área         | Tecnologia                                      |
-|--------------|-------------------------------------------------|
-| **Backend**  | NestJS, TypeScript, Prisma, PostgreSQL, Passport.js (JWT) |
-| **Frontend** | React, Vite, TypeScript, TailwindCSS, React-Router    |
-| **Banco de Dados** | PostgreSQL                                      |
-| **DevOps**   | Docker, Docker Compose                          |
+Pré-requisitos: Docker e Docker Compose.
 
----
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-## ⚡ Como Executar o Projeto
+Depois que os serviços iniciarem:
 
-Este projeto é 100% containerizado, garantindo que ele funcione de forma idêntica em qualquer ambiente.
+- aplicação: `http://localhost:8080`;
+- API: `http://localhost:3000/api`;
+- Swagger: `http://localhost:3000/api/docs`.
 
-**Pré-requisitos:**
-*   [Docker](https://www.docker.com/get-started)
-*   [Docker Compose](https://docs.docker.com/compose/install/)
+Para encerrar:
 
-**Passo a passo:**
-1.  Clone este repositório:
-    ```bash
-    git clone <URL_DO_SEU_REPOSITORIO>
-    ```
-2.  Navegue até a raiz do projeto e execute o Docker Compose:
-    ```bash
-    cd <NOME_DA_PASTA>
-    docker-compose up -d
-    ```
-3.  É isso! A aplicação estará disponível nos seguintes endereços:
-    *   **Frontend (React):** `http://localhost:5173`
-    *   **Backend (NestJS):** `http://localhost:3000`
-    *   **Documentação da API (Swagger):** `http://localhost:3000/api/docs`
+```bash
+docker compose down
+```
 
----
+## Desenvolvimento sem Docker
 
-## 🏗️ Destaques de Arquitetura e Segurança
+Frontend:
 
-*   **Monorepo com Separação de Responsabilidades (SoC):** O código do frontend (`/web`) e do backend (`/api`) vivem no mesmo repositório, mas são completamente desacoplados, permitindo desenvolvimento e deploy independentes.
-*   **Backend Modular:** O NestJS foi estruturado em módulos (`Auth`, `Users`, `Tasks`), onde cada um tem sua responsabilidade bem definida (Controllers para rotas, Services para regras de negócio).
-*   **Segurança por "Ownership":** A camada de serviço do backend verifica sistematicamente a propriedade dos dados em cada requisição, garantindo que um usuário só possa manipular as tarefas que lhe pertencem.
-*   **Ambiente de Desenvolvimento Automatizado:** O `docker-compose` não apenas sobe os serviços, mas o container da API executa as migrações do Prisma (`prisma migrate deploy`) automaticamente no startup, eliminando qualquer passo manual de configuração do banco de dados.
+```bash
+cd web
+pnpm install
+pnpm dev
+```
 
----
-*Desenvolvido com foco em alta performance e boas práticas de engenharia.*
+API:
+
+```bash
+cd api
+pnpm install
+npx prisma generate
+pnpm start:dev
+```
+
+A API precisa de um PostgreSQL disponível e da variável `DATABASE_URL` configurada.
+
+## Testes
+
+```bash
+cd web && pnpm test --run
+cd api && pnpm test --runInBand
+```
+
+## Estrutura
+
+```text
+api/
+  prisma/          schema e migrações do banco
+  src/auth/        autenticação e recuperação de senha
+  src/comments/    comentários das tarefas
+  src/tasks/       regras e endpoints das tarefas
+  src/users/       cadastro e perfil
+web/
+  src/api/         cliente HTTP e chamadas da API
+  src/app/pages/   páginas da aplicação
+  src/components/  componentes visuais
+  src/contexts/    tema da interface
+  src/hooks/       estado de autenticação
+```
+
+O backend usa o ID do token JWT para filtrar tarefas e validar alterações. Assim, cada usuário acessa apenas os próprios dados.

@@ -1,19 +1,18 @@
 # Firebase
 .firebase/hosting.*.log
 .firebase/emulators.log
-
-# Project IDX
-.idx/
+firebase-debug.log
 
 # Dependencies
 node_modules
-pnpm-lock.yaml
+.pnpm-store/
 
 # Build cache and output
 .next/
 out/
 build/
 web/dist
+vite.config.ts.timestamp-*.mjs
 
 # Environment variables
 .env
