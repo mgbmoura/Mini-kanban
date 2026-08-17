@@ -19,7 +19,7 @@ export function ForgotPasswordPage() {
       await authService.forgotPassword(email);
       setSubmitted(true);
       toast.success('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
-    } catch (error) {
+    } catch {
       toast.success('Se uma conta com o endereço existir, um link para redefinição foi enviado.');
     } finally {
       setLoading(false);

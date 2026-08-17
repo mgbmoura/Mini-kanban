@@ -6,7 +6,6 @@ import { ResetPasswordPage } from './ResetPasswordPage';
 import { toast } from 'sonner';
 import { authService } from '../../api/auth-api';
 
-// Mock de módulos
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -16,16 +15,14 @@ vi.mock('sonner', () => ({
 vi.mock('../../api/auth-api');
 
 const mockNavigate = vi.fn();
-// Mock do react-router-dom para controlar a navegação
 vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
-    return {
-        ...actual as any,
-        useNavigate: () => mockNavigate,
-    };
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
 });
 
-// Função auxiliar para renderizar o componente com um token no URL
 const renderComponentWithToken = (token: string | null) => {
   const route = token ? `/reset-password?token=${token}` : '/reset-password';
   return render(
@@ -43,20 +40,16 @@ describe('ResetPasswordPage', () => {
   });
 
   it('redefine a senha com sucesso com um token válido', async () => {
-    // O mock foi corrigido para retornar uma AxiosResponse simulada
-    vi.mocked(authService.resetPassword).mockResolvedValueOnce({ data: {}, status: 200, statusText: 'OK', headers: {}, config: {} as any });
+    vi.mocked(authService.resetPassword).mockResolvedValueOnce();
     renderComponentWithToken('valid-token');
 
-    // Preenche as senhas
     fireEvent.change(screen.getByLabelText('Nova Senha'), { target: { value: 'new-password' } });
     fireEvent.change(screen.getByLabelText('Confirme a Nova Senha'), { target: { value: 'new-password' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Nova Senha' }));
 
-    // Verifica o estado de carregamento
     expect(screen.getByRole('button', { name: /Salvando.../i })).toBeDisabled();
 
     await waitFor(() => {
-      // Verifica se a função do serviço foi chamada e se a navegação ocorreu
       expect(authService.resetPassword).toHaveBeenCalledWith('valid-token', 'new-password');
       expect(toast.success).toHaveBeenCalledWith('Senha redefinida com sucesso!');
       expect(mockNavigate).toHaveBeenCalledWith('/login');
@@ -71,7 +64,6 @@ describe('ResetPasswordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Nova Senha' }));
 
     await waitFor(() => {
-      // Verifica se a mensagem de erro é exibida e o serviço não é chamado
       expect(screen.getByText('As senhas não coincidem.')).toBeInTheDocument();
       expect(authService.resetPassword).not.toHaveBeenCalled();
     });
@@ -85,7 +77,6 @@ describe('ResetPasswordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Nova Senha' }));
 
     await waitFor(() => {
-      // Verifica a mensagem de erro e se o serviço não foi chamado
       expect(screen.getByText('A senha deve ter pelo menos 6 caracteres.')).toBeInTheDocument();
       expect(authService.resetPassword).not.toHaveBeenCalled();
     });
@@ -107,10 +98,9 @@ describe('ResetPasswordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Nova Senha' }));
 
     await waitFor(() => {
-      // Verifica se a mensagem de erro da API é exibida
       expect(screen.getByText(apiError.message)).toBeInTheDocument();
       expect(toast.error).toHaveBeenCalledWith(apiError.message);
-      expect(mockNavigate).not.toHaveBeenCalled(); // Não deve navegar
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 });

@@ -33,15 +33,15 @@ export const authService = {
     return updatedUser;
   },
 
-  async register(name: string, email: string, password: string) {
-    return api.post('/auth/register', { name, email, password });
+  async register(name: string, email: string, password: string): Promise<void> {
+    await api.post('/auth/register', { name, email, password });
   },
 
-  async forgotPassword(email: string) {
-    return api.post('/auth/forgot-password', { email });
+  async forgotPassword(email: string): Promise<void> {
+    await api.post('/auth/forgot-password', { email });
   },
 
-  async resetPassword(token: string, password: string) {
-    return api.post('/auth/reset-password', { token, password });
+  async resetPassword(token: string, password: string): Promise<void> {
+    await api.post('/auth/reset-password', { token, password });
   },
 };
