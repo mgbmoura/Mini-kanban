@@ -11,8 +11,12 @@ node_modules
 .next/
 out/
 build/
-web/dist
+dist/
 vite.config.ts.timestamp-*.mjs
+
+# Generated Prisma copies (canonical files live in api/prisma)
+api/migrations/
+api/schema.prisma
 
 # Environment variables
 .env

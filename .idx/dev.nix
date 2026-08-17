@@ -20,21 +20,21 @@
       "google.gemini-cli-vscode-ide-companion"
     ];
 
-    # workspace = {
-    #   onCreate = {
-    #     api-install = "cd api && pnpm install";
-    #     web-install = "cd web && pnpm install";
-    #   };
-
-    #   onStart = {
-    #     # Apenas sobe os contentores existentes de forma leve, sem conflitos
-    #     start-containers = "docker-compose up -d"; 
-    #   };
-    # };
-
     previews = {
-      # Desligamos as previews complexas do IDX para deixar o Docker controlar tudo
       enable = true;
+      previews.web = {
+        command = [
+          "pnpm"
+          "dev"
+          "--"
+          "--port"
+          "$PORT"
+          "--host"
+          "0.0.0.0"
+        ];
+        cwd = "web";
+        manager = "web";
+      };
     };
   };
 }
