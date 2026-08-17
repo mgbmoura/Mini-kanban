@@ -26,7 +26,6 @@
         command = [
           "pnpm"
           "dev"
-          "--"
           "--port"
           "$PORT"
           "--host"
