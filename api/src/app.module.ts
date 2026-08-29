@@ -1,29 +1,39 @@
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { AutenticacaoModule } from './autenticacao/autenticacao.module';
+import { ComentariosModule } from './comentarios/comentarios.module';
+import { EmailModule } from './email/email.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { TasksModule } from './tasks/tasks.module';
-import { UsersModule } from './users/users.module';
-import { MailModule } from './mail/mail.module'; 
-import { CommentsModule } from './comments/comments.module';
+import { TarefasModule } from './tarefas/tarefas.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
 
-/**
- * AppModule: O ponto central da aplicação.
- * Cada módulo (Auth, Tasks, Users, etc.) é independente e encapsulado,
- * seguindo os princípios de alta coesão e baixo acoplamento.
- */
+function localizarBuildFrontend() {
+  const caminhos = [
+    join(process.cwd(), 'web', 'dist'),
+    join(process.cwd(), '..', 'web', 'dist'),
+    join(__dirname, '..', '..', 'web', 'dist'),
+    join(__dirname, '..', '..', '..', 'web', 'dist'),
+  ];
+
+  return caminhos.find((caminho) => existsSync(join(caminho, 'index.html'))) ?? caminhos[0];
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ServeStaticModule.forRoot({
+      rootPath: localizarBuildFrontend(),
+      exclude: ['/api', '/api/*path'],
+    }),
     PrismaModule,
-    UsersModule,
-    AuthModule,
-    TasksModule,
-    MailModule, 
-    CommentsModule,
+    UsuariosModule,
+    AutenticacaoModule,
+    TarefasModule,
+    EmailModule,
+    ComentariosModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

@@ -3,19 +3,13 @@ import tailwindcssAnimate from 'tailwindcss-animate';
 /** @type {import('tailwindcss').Config} */
 const config = {
   darkMode: 'class',
-  content: [
-    './index.html',
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-  ],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: '2rem',
       screens: {
-        "2xl": "1400px",
+        '2xl': '1400px',
       },
     },
     extend: {
@@ -55,23 +49,23 @@ const config = {
         },
       },
       borderRadius: {
+        xs: '0.125rem',
         lg: 'var(--radius)',
-        md: `calc(var(--radius) - 2px)`,
+        md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
-      keyframes: {
-        "accordion-down": {
-          from: { height: 0 },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        "accordion-up": {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: 0 },
-        },
+      spacing: {
+        '4.5': '1.125rem',
       },
-      animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
+      boxShadow: {
+        '2xs': '0 1px rgb(0 0 0 / 0.05)',
+        xs: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      },
+      blur: {
+        xs: '4px',
+      },
+      dropShadow: {
+        xs: '0 1px 1px rgb(0 0 0 / 0.05)',
       },
     },
   },

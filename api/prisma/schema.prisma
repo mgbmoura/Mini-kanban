@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,6 +11,12 @@ enum TaskStatus {
   TODO
   DOING
   DONE
+}
+
+enum CardStyle {
+  SPIRAL
+  TAPE
+  BINDER
 }
 
 model User {
@@ -38,6 +41,7 @@ model Task {
   description     String?
   status          TaskStatus @default(TODO)
   priority        String?   @default("Média")
+  cardStyle       CardStyle @default(SPIRAL)
   tags            String[]  @default([])
   attachmentImage String?
   position        Float     @default(0)

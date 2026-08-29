@@ -6,44 +6,44 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;       /* slate-50 */
-    --foreground: 215 28% 27%;      /* slate-800 */
-    --card: 0 0% 100%;             /* white */
-    --card-foreground: 215 28% 27%;  /* slate-800 */
-    --popover: 0 0% 100%;          /* white */
-    --popover-foreground: 215 28% 27%; /* slate-800 */
-    --primary: 158 83% 35%;          /* emerald-600 */
-    --primary-foreground: 0 0% 100%;  /* white */
-    --secondary: 210 40% 96.1%;     /* slate-100 */
-    --secondary-foreground: 215 28% 17%; /* slate-900 */
-    --muted: 215 14% 47%;          /* slate-500 */
-    --muted-foreground: 215 14% 47%;  /* slate-500 */
-    --accent: 210 40% 96.1%;        /* slate-100 */
-    --accent-foreground: 158 83% 35%; /* emerald-600 */
-    --destructive: 0 72% 51%;        /* red-600 */
+    --background: 210 40% 98%;       
+    --foreground: 215 28% 27%;      
+    --card: 0 0% 100%;             
+    --card-foreground: 215 28% 27%;  
+    --popover: 0 0% 100%;          
+    --popover-foreground: 215 28% 27%; 
+    --primary: 158 83% 35%;          
+    --primary-foreground: 0 0% 100%;  
+    --secondary: 210 40% 96.1%;     
+    --secondary-foreground: 215 28% 17%; 
+    --muted: 215 14% 47%;          
+    --muted-foreground: 215 14% 47%;  
+    --accent: 210 40% 96.1%;        
+    --accent-foreground: 158 83% 35%; 
+    --destructive: 0 72% 51%;        
     --destructive-foreground: 0 0% 100%;
-    --border: 210 32% 91%;        /* slate-200 */
-    --input: 215 20% 65%;         /* slate-300 */
-    --ring: 158 79% 40%;           /* emerald-500 */
+    --border: 210 32% 91%;        
+    --input: 215 20% 65%;         
+    --ring: 158 79% 40%;           
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 210 29% 10%;    /* slate-950 */
-    --foreground: 210 40% 98%;   /* slate-50 */
-    --card: 210 29% 12%;        /* a bit lighter than bg */
+    --background: 210 29% 10%;    
+    --foreground: 210 40% 98%;   
+    --card: 210 29% 12%;        
     --card-foreground: 210 40% 98%;
     --popover: 210 29% 10%;
     --popover-foreground: 210 40% 98%;
-    --primary: 259 92% 66%;      /* violet-500 */
-    --primary-foreground: 0 0% 100%; /* white */
-    --secondary: 217 33% 18%;     /* slate-800 */
+    --primary: 259 92% 66%;      
+    --primary-foreground: 0 0% 100%; 
+    --secondary: 217 33% 18%;     
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 18%;
-    --muted-foreground: 215 20% 65%;  /* slate-400 */
+    --muted-foreground: 215 20% 65%;  
     --accent: 217 33% 18%;
     --accent-foreground: 259 92% 66%;
-    --destructive: 0 63% 31%;    /* red-900 */
+    --destructive: 0 63% 31%;    
     --destructive-foreground: 210 40% 98%;
     --border: 217 33% 18%;
     --input: 217 33% 18%;
@@ -54,5 +54,67 @@
   body {
     font-family: 'Inter', sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+.app-grid-background {
+  background-color: #fbfbf9;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+.dark .app-grid-background {
+  background-color: #0b0f17;
+  background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+.surface-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.dark .surface-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 10px -1px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.surface-shadow-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.surface-shadow-hover:hover {
+  box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.dark .surface-shadow-hover:hover {
+  box-shadow: 0 8px 18px -2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.ruled-background {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 23px,
+    rgba(203, 213, 225, 0.35) 23px,
+    rgba(203, 213, 225, 0.35) 24px
+  );
+}
+
+.dark .ruled-background {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 23px,
+    rgba(51, 65, 85, 0.4) 23px,
+    rgba(51, 65, 85, 0.4) 24px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface-shadow-hover,
+  .animate-bounce,
+  .animate-pulse,
+  .transition-all,
+  .transition-transform {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
   }
 }
