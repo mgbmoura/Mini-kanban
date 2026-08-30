@@ -173,9 +173,16 @@ jobs:
       MAIL_USER: teste
       MAIL_PASS: teste
       MAIL_FROM: teste@example.com
+      BASE_URL: http://127.0.0.1:8080
+      PLAYWRIGHT_HTML_OPEN: never
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       - name: Validar Compose
         run: docker compose config > /dev/null
@@ -212,6 +219,27 @@ jobs:
           test "$codigo_api" = "401"
           codigo_proxy=$(curl --silent --output /tmp/api-proxy.txt --write-out "%{http_code}" http://127.0.0.1:8080/api/tasks)
           test "$codigo_proxy" = "401"
+
+      - name: Instalar dependencias do navegador
+        run: npm install --no-audit --no-fund
+
+      - name: Instalar Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Validar interface no navegador
+        run: npm run test:e2e --workspace=web -- --reporter=line,html
+
+      - name: Publicar capturas e relatorio
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validacao-visual-mini-kanban
+          path: |
+            web/artifacts/browser
+            web/playwright-report
+            web/test-results
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Logs em caso de falha
         if: failure()
