@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "test": "vitest run",
+    "test": "vitest run src",
     "test:e2e": "playwright test e2e/fluxo-visual.spec.ts",
     "test:ui": "vitest --ui"
   },
