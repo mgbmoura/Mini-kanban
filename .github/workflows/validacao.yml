@@ -103,7 +103,7 @@ jobs:
           TAREFA_ID=$(node -e "const x=require('/tmp/tarefa.json'); if(!x.id) process.exit(1); process.stdout.write(x.id)")
 
           curl --fail --silent "$BASE/tasks" -H "Authorization: Bearer $TOKEN1" > /tmp/tarefas.json
-          node -e "const x=require('/tmp/tarefas.json'); if(!Array.isArray(x)||!x.some(t=>t.id===process.env.TAREFA_ID&&t.title==='Tarefa CI')) process.exit(1)" TAREFA_ID="$TAREFA_ID"
+          TAREFA_ID="$TAREFA_ID" node -e "const x=require('/tmp/tarefas.json'); if(!Array.isArray(x)||!x.some(t=>t.id===process.env.TAREFA_ID&&t.title==='Tarefa CI')) process.exit(1)"
 
           curl --fail --silent -X PATCH "$BASE/tasks/$TAREFA_ID" \
             -H "Authorization: Bearer $TOKEN1" \
