@@ -122,20 +122,31 @@ test('fluxo principal e telas do Mini Kanban', async ({ page }) => {
   await page.getByLabel('Nome completo').fill('Navegador CI Atualizado');
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(page.getByLabel('Nome completo')).toHaveValue('Navegador CI Atualizado');
-  await aguardarToasts(page);
+
+  const toastPerfilAtualizado = page.getByText('Perfil atualizado com sucesso!');
+  await expect(toastPerfilAtualizado).toBeVisible();
+  await expect(toastPerfilAtualizado).toBeHidden({ timeout: 8000 });
 
   await page.getByRole('button', { name: 'Abrir menu' }).click();
   await page.getByRole('button', { name: 'Sair' }).click();
   await expect(page).toHaveURL(/\/login$/);
-  await aguardarInterface(page);
+  await expect(page.getByRole('heading', { name: 'Mini Kanban' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Esqueceu sua senha?' }).click();
   await expect(page).toHaveURL(/\/forgot-password$/);
+  await expect(page.getByRole('heading', { name: 'Recuperar Senha' })).toBeVisible();
+  await aguardarInterface(page);
   await page.screenshot({ path: `${PASTA_CAPTURAS}/11-esqueci-senha.png`, fullPage: true });
+
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByRole('button', { name: 'Enviar Link de Redefinição' }).click();
+  await expect(page.getByRole('heading', { name: 'Verifique seu E-mail' })).toBeVisible();
+  await page.screenshot({ path: `${PASTA_CAPTURAS}/12-confirmacao-recuperacao.png`, fullPage: true });
 
   await page.goto(`${BASE_URL}/reset-password?token=token-de-validacao`, { waitUntil: 'networkidle' });
   await expect(page).toHaveURL(/\/reset-password\?token=token-de-validacao$/);
-  await page.screenshot({ path: `${PASTA_CAPTURAS}/12-redefinir-senha.png`, fullPage: true });
+  await expect(page.getByRole('heading', { name: 'Nova Senha' })).toBeVisible();
+  await page.screenshot({ path: `${PASTA_CAPTURAS}/13-redefinir-senha.png`, fullPage: true });
 
   expect(errosDoNavegador, errosDoNavegador.join('\n')).toEqual([]);
 });
