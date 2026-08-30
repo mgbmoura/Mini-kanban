@@ -1,5 +1,5 @@
-import { EstiloCartao } from '../types/quadro';
 import { Check } from 'lucide-react';
+import { EstiloCartao } from '../types/quadro';
 
 interface SeletorEstiloCartaoProps {
   valor: EstiloCartao;
@@ -61,12 +61,6 @@ export function SeletorEstiloCartao({ valor, aoAlterar }: SeletorEstiloCartaoPro
               role="radio"
               aria-checked={selecionado}
               onClick={() => aoAlterar(opcao.id)}
-              onKeyDown={(evento) => {
-                if (evento.key === ' ' || evento.key === 'Enter') {
-                  evento.preventDefault();
-                  aoAlterar(opcao.id);
-                }
-              }}
               className={`relative flex flex-col text-left p-3 rounded-xl border-2 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
                 selecionado
                   ? 'border-emerald-600 dark:border-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 shadow-sm ring-1 ring-emerald-500/30'

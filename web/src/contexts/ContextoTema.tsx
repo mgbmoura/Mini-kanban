@@ -2,36 +2,30 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 type Tema = 'dark' | 'light';
 
-interface ProvedorTemaProps {
-  children: ReactNode;
-  temaPadrao?: Tema;
-  chaveArmazenamento?: string;
-}
-
 interface ContextoTemaValor {
   tema: Tema;
   definirTema: (tema: Tema) => void;
 }
 
+const CHAVE_TEMA = 'mini-kanban-theme';
 const ContextoTema = createContext<ContextoTemaValor | undefined>(undefined);
 
-export function ProvedorTema({
-  children,
-  temaPadrao = 'light',
-  chaveArmazenamento = 'vite-ui-theme',
-}: ProvedorTemaProps) {
-  const [tema, setTema] = useState<Tema>(
-    () => (localStorage.getItem(chaveArmazenamento) as Tema) || temaPadrao,
-  );
+function obterTemaSalvo(): Tema {
+  const temaSalvo = localStorage.getItem(CHAVE_TEMA);
+  return temaSalvo === 'dark' ? 'dark' : 'light';
+}
+
+export function ProvedorTema({ children }: { children: ReactNode }) {
+  const [tema, setTema] = useState<Tema>(obterTemaSalvo);
 
   useEffect(() => {
-    const raiz = window.document.documentElement;
+    const raiz = document.documentElement;
     raiz.classList.remove('light', 'dark');
     raiz.classList.add(tema);
   }, [tema]);
 
   const definirTema = (novoTema: Tema) => {
-    localStorage.setItem(chaveArmazenamento, novoTema);
+    localStorage.setItem(CHAVE_TEMA, novoTema);
     setTema(novoTema);
   };
 

@@ -8,7 +8,6 @@ interface ItemNavegacao {
   icone: ElementType;
   rotulo: string;
   caminho: string;
-  desabilitado?: boolean;
 }
 
 interface BarraLateralProps {
@@ -20,7 +19,6 @@ interface BarraLateralProps {
 
 const ITENS_NAVEGACAO: ItemNavegacao[] = [
   { icone: LayoutDashboard, rotulo: 'Quadro', caminho: '/app' },
-  { icone: LayoutDashboard, rotulo: 'Equipe (Em breve)', caminho: '#', desabilitado: true },
   { icone: Settings, rotulo: 'Configurações', caminho: '/app/settings' },
 ];
 
@@ -30,6 +28,11 @@ export function BarraLateral({ aberta, aoFechar, aoSair, usuario }: BarraLateral
 
   const abrirPagina = (caminho: string) => {
     navegar(caminho);
+    aoFechar();
+  };
+
+  const sair = () => {
+    aoSair();
     aoFechar();
   };
 
@@ -65,13 +68,12 @@ export function BarraLateral({ aberta, aoFechar, aoSair, usuario }: BarraLateral
             return (
               <button
                 key={item.rotulo}
-                onClick={() => !item.desabilitado && abrirPagina(item.caminho)}
-                disabled={item.desabilitado}
+                onClick={() => abrirPagina(item.caminho)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors mb-1 ${
                   ativo
                     ? 'bg-accent text-accent-foreground font-semibold'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                } ${item.desabilitado ? 'opacity-50 cursor-not-allowed' : ''}`}
+                }`}
               >
                 <Icone className="w-5 h-5" />
                 <span>{item.rotulo}</span>
@@ -86,10 +88,7 @@ export function BarraLateral({ aberta, aoFechar, aoSair, usuario }: BarraLateral
             <span className="text-xs text-muted-foreground truncate">{usuario.email}</span>
           </div>
           <button
-            onClick={() => {
-              aoSair();
-              aoFechar();
-            }}
+            onClick={sair}
             className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-destructive hover:bg-destructive/90 transition-all active:scale-95 shadow-md shadow-destructive/20"
           >
             <LogOut className="w-4 h-4" />

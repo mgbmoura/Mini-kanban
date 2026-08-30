@@ -1,70 +1,64 @@
 import axios from 'axios';
 import { ArrowRight, Lock, Mail, User as IconeUsuario } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { IconeMascote } from '../../components/IconeMascote';
 import { useAutenticacao } from '../../contexts/ContextoAutenticacao';
 
-type ModoAcesso = 'login' | 'register';
-
-function obterModoAtual(): ModoAcesso {
-  const parametros = new URLSearchParams(window.location.search);
-  return window.location.pathname === '/register' || parametros.get('mode') === 'register'
-    ? 'register'
-    : 'login';
-}
-
 export default function PaginaLogin() {
   const { entrar, cadastrar } = useAutenticacao();
   const navegar = useNavigate();
-  const [modo, setModo] = useState<ModoAcesso>(obterModoAtual());
+  const localizacao = useLocation();
+
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [nome, setNome] = useState('');
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
 
-  useEffect(() => {
-    const atualizarModo = () => setModo(obterModoAtual());
-    window.addEventListener('popstate', atualizarModo);
-    return () => window.removeEventListener('popstate', atualizarModo);
-  }, []);
+  const login = localizacao.pathname !== '/register';
 
-  const definirModo = (novoModo: ModoAcesso) => {
-    const url = novoModo === 'register' ? '/register' : '/login';
-    window.history.pushState({ mode: novoModo }, '', url);
-    setModo(novoModo);
+  const alternarModo = () => {
+    navegar(login ? '/register' : '/login');
     setErro('');
   };
 
-  const enviar = async (evento: React.FormEvent) => {
+  const enviar = async (evento: FormEvent) => {
     evento.preventDefault();
     setErro('');
     setCarregando(true);
 
     try {
-      if (modo === 'login') {
+      if (login) {
         await entrar({ email, senha });
         navegar('/app');
         return;
       }
 
-      if (!nome.trim()) throw new Error('Nome é obrigatório.');
-      if (senha.length < 6) throw new Error('A senha deve ter pelo menos 6 caracteres.');
+      if (!nome.trim()) {
+        throw new Error('Nome é obrigatório.');
+      }
+
+      if (senha.length < 6) {
+        throw new Error('A senha deve ter pelo menos 6 caracteres.');
+      }
 
       await cadastrar(nome, email, senha);
       toast.success('Conta criada com sucesso! Faça login para continuar.');
-      definirModo('login');
+
       setNome('');
       setEmail('');
       setSenha('');
+      navegar('/login');
     } catch (erroCapturado) {
-      const mensagem = axios.isAxiosError(erroCapturado)
-        ? erroCapturado.response?.data?.message || 'Não foi possível concluir a operação.'
-        : erroCapturado instanceof Error
-          ? erroCapturado.message
-          : 'Ocorreu um erro desconhecido.';
+      let mensagem = 'Ocorreu um erro desconhecido.';
+
+      if (axios.isAxiosError<{ message?: string }>(erroCapturado)) {
+        mensagem = erroCapturado.response?.data?.message ?? 'Não foi possível concluir a operação.';
+      } else if (erroCapturado instanceof Error) {
+        mensagem = erroCapturado.message;
+      }
 
       setErro(mensagem);
       toast.error(mensagem);
@@ -73,7 +67,13 @@ export default function PaginaLogin() {
     }
   };
 
-  const login = modo === 'login';
+  let textoBotao = 'Entrar';
+
+  if (carregando) {
+    textoBotao = 'Processando...';
+  } else if (!login) {
+    textoBotao = 'Criar conta';
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 app-grid-background flex items-center justify-center p-4 sm:p-6 transition-colors relative overflow-hidden">
@@ -187,14 +187,14 @@ export default function PaginaLogin() {
               disabled={carregando}
               className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold py-2.5 rounded-xl transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 cursor-pointer text-sm flex items-center justify-center gap-2"
             >
-              <span>{carregando ? 'Processando...' : login ? 'Entrar' : 'Criar conta'}</span>
+              <span>{textoBotao}</span>
               {!carregando && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
 
           <div className="mt-6 text-center pt-4 border-t border-slate-200/90 dark:border-slate-800">
             <button
-              onClick={() => definirModo(login ? 'register' : 'login')}
+              onClick={alternarModo}
               className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline transition-all cursor-pointer"
             >
               {login ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Faça login'}

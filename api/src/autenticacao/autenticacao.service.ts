@@ -22,13 +22,22 @@ export class AutenticacaoService {
 
   async entrar(credenciais: EntrarDto) {
     const usuario = await this.usuariosService.buscarPorEmail(credenciais.email);
-    const senhaValida = usuario && (await bcrypt.compare(credenciais.password, usuario.password));
 
-    if (!usuario || !senhaValida) {
+    if (!usuario) {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
-    const payload = { sub: usuario.id, email: usuario.email, name: usuario.name };
+    const senhaValida = await bcrypt.compare(credenciais.password, usuario.password);
+
+    if (!senhaValida) {
+      throw new UnauthorizedException('Credenciais inválidas.');
+    }
+
+    const payload = {
+      sub: usuario.id,
+      email: usuario.email,
+      name: usuario.name,
+    };
 
     return {
       accessToken: this.jwtService.sign(payload),
@@ -80,8 +89,10 @@ export class AutenticacaoService {
       throw new BadRequestException('Token de recuperação inválido ou expirado.');
     }
 
+    const senhaCriptografada = await bcrypt.hash(dados.password, 10);
+
     await this.usuariosRepository.atualizar(usuario.id, {
-      password: await bcrypt.hash(dados.password, 10),
+      password: senhaCriptografada,
       passwordResetToken: null,
       passwordResetExpires: null,
     });

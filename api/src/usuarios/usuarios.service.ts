@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, type User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { AtualizarUsuarioDto } from './dto/atualizar-usuario.dto';
@@ -17,10 +17,12 @@ export class UsuariosService {
       throw new ConflictException('Este e-mail já está em uso.');
     }
 
+    const senhaCriptografada = await bcrypt.hash(dados.password, 10);
+
     const usuario = await this.usuariosRepository.criar({
       name: dados.name,
       email: dados.email,
-      password: await bcrypt.hash(dados.password, 10),
+      password: senhaCriptografada,
       avatarUrl: this.gerarUrlGravatar(dados.email),
     });
 
@@ -71,13 +73,7 @@ export class UsuariosService {
     return `https://www.gravatar.com/avatar/${hash}?d=retro`;
   }
 
-  private removerDadosSensiveis<
-    T extends {
-      password: string;
-      passwordResetToken: string | null;
-      passwordResetExpires: Date | null;
-    },
-  >(usuario: T): Omit<T, 'password' | 'passwordResetToken' | 'passwordResetExpires'> {
+  private removerDadosSensiveis(usuario: User) {
     const {
       password: _senha,
       passwordResetToken: _tokenRedefinicao,

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Trash2, Image as ImageIcon, MessageSquare, Send, BookOpen, Tag, Calendar } from 'lucide-react';
-import { Comentario, EstiloCartao, PrioridadeTarefa, StatusTarefa, Tarefa } from '../types/quadro';
+import React, { useEffect, useRef, useState } from 'react';
+import { BookOpen, Calendar, Image as ImageIcon, MessageSquare, Send, Tag, Trash2, X } from 'lucide-react';
 import { servicoComentarios } from '../services/servicoComentarios';
+import { Comentario, EstiloCartao, PrioridadeTarefa, StatusTarefa, Tarefa } from '../types/quadro';
 import { useAutenticacao } from '../contexts/ContextoAutenticacao';
 import { SeletorEstiloCartao } from './SeletorEstiloCartao';
 
@@ -57,10 +57,10 @@ export function ModalTarefa({
   const [entradaEtiqueta, setEntradaEtiqueta] = useState('');
   const [imagemAnexa, setImagemAnexa] = useState(tarefa?.imagemAnexa || '');
   const [entradaImagem, setEntradaImagem] = useState('');
-
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [entradaComentario, setEntradaComentario] = useState('');
   const [carregandoComentarios, setCarregandoComentarios] = useState(false);
+
   useEffect(() => {
     if (tarefa) {
       setTitulo(tarefa.titulo || '');
@@ -70,21 +70,24 @@ export function ModalTarefa({
       setEstiloCartao(tarefa.estiloCartao || 'SPIRAL');
       setEtiquetas(tarefa.etiquetas || []);
       setImagemAnexa(tarefa.imagemAnexa || '');
-    } else {
-      setTitulo('');
-      setDescricao('');
-      setStatus(statusPadrao);
-      setPrioridade('Média');
-      setEstiloCartao('SPIRAL');
-      setEtiquetas([]);
-      setImagemAnexa('');
+      return;
     }
+
+    setTitulo('');
+    setDescricao('');
+    setStatus(statusPadrao);
+    setPrioridade('Média');
+    setEstiloCartao('SPIRAL');
+    setEtiquetas([]);
+    setImagemAnexa('');
   }, [tarefa, statusPadrao, aberto]);
+
   useEffect(() => {
     if (tarefa?.id && aberto) {
-      carregarComentarios(tarefa.id);
+      void carregarComentarios(tarefa.id);
     }
   }, [tarefa?.id, aberto]);
+
   useEffect(() => {
     if (!aberto) return;
 
@@ -97,16 +100,20 @@ export function ModalTarefa({
     window.addEventListener('keydown', tratarTecla);
     return () => window.removeEventListener('keydown', tratarTecla);
   }, [aberto, aoFechar]);
+
   useEffect(() => {
-    if (aberto) {
-      setTimeout(() => {
-        referenciaTitulo.current?.focus();
-      }, 50);
-    }
+    if (!aberto) return;
+
+    const temporizador = window.setTimeout(() => {
+      referenciaTitulo.current?.focus();
+    }, 50);
+
+    return () => window.clearTimeout(temporizador);
   }, [aberto]);
 
   const carregarComentarios = async (tarefaId: string) => {
     setCarregandoComentarios(true);
+
     try {
       const comentariosDaTarefa = await servicoComentarios.listar(tarefaId);
       setComentarios(comentariosDaTarefa);
@@ -118,11 +125,14 @@ export function ModalTarefa({
   };
 
   const adicionarComentario = async () => {
-    if (!entradaComentario.trim() || !tarefa || !usuario) return;
+    const conteudo = entradaComentario.trim();
+
+    if (!conteudo || !tarefa || !usuario) return;
 
     try {
-      const novoComentario = await servicoComentarios.criar(tarefa.id, entradaComentario.trim());
+      const novoComentario = await servicoComentarios.criar(tarefa.id, conteudo);
       const proximosComentarios = [...comentarios, novoComentario];
+
       setComentarios(proximosComentarios);
       aoAlterarQuantidadeComentarios?.(tarefa.id, proximosComentarios.length);
       setEntradaComentario('');
@@ -137,6 +147,7 @@ export function ModalTarefa({
     try {
       await servicoComentarios.remover(comentarioId);
       const proximosComentarios = comentarios.filter((comentario) => comentario.id !== comentarioId);
+
       setComentarios(proximosComentarios);
       aoAlterarQuantidadeComentarios?.(tarefa.id, proximosComentarios.length);
     } catch (erro) {
@@ -163,7 +174,12 @@ export function ModalTarefa({
   };
 
   const obterIniciais = (nome: string): string => {
-    return nome.split(' ').map((palavra) => palavra[0]).join('').toUpperCase().slice(0, 2);
+    return nome
+      .split(' ')
+      .map((palavra) => palavra[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const obterCorAvatar = (iniciais: string): string => {
@@ -173,6 +189,7 @@ export function ModalTarefa({
 
   const enviarFormulario = (evento: React.FormEvent) => {
     evento.preventDefault();
+
     aoSalvar({
       id: tarefa?.id,
       titulo,
@@ -187,10 +204,13 @@ export function ModalTarefa({
   };
 
   const adicionarEtiqueta = () => {
-    if (entradaEtiqueta.trim() && !etiquetas.includes(entradaEtiqueta.trim())) {
-      setEtiquetas([...etiquetas, entradaEtiqueta.trim()]);
-      setEntradaEtiqueta('');
-    }
+    const novaEtiqueta = entradaEtiqueta.trim();
+
+    if (!novaEtiqueta) return;
+    if (etiquetas.includes(novaEtiqueta)) return;
+
+    setEtiquetas([...etiquetas, novaEtiqueta]);
+    setEntradaEtiqueta('');
   };
 
   const removerEtiqueta = (etiquetaParaRemover: string) => {
@@ -198,21 +218,87 @@ export function ModalTarefa({
   };
 
   const adicionarImagem = () => {
-    if (entradaImagem.trim()) {
-      setImagemAnexa(entradaImagem.trim());
-      setEntradaImagem('');
-    }
+    const urlImagem = entradaImagem.trim();
+
+    if (!urlImagem) return;
+
+    setImagemAnexa(urlImagem);
+    setEntradaImagem('');
   };
 
   const excluirTarefa = () => {
-    if (tarefa && aoExcluir && confirm('Tem certeza que deseja excluir esta tarefa?')) {
+    if (!tarefa || !aoExcluir) return;
+
+    const confirmouExclusao = window.confirm('Tem certeza que deseja excluir esta tarefa?');
+
+    if (confirmouExclusao) {
       aoExcluir(tarefa.id);
     }
   };
 
+  const renderizarComentarios = () => {
+    if (carregandoComentarios) {
+      return (
+        <div className="text-center text-slate-500 dark:text-slate-400 text-xs py-6">
+          Carregando comentários...
+        </div>
+      );
+    }
+
+    if (comentarios.length === 0) {
+      return (
+        <div className="text-center text-slate-400 dark:text-slate-500 text-xs py-8 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4">
+          Nenhum comentário nesta tarefa.
+        </div>
+      );
+    }
+
+    return comentarios.map((comentario) => {
+      const iniciais = obterIniciais(comentario.nomeUsuario || 'U');
+      const ehAutor = usuario?.id === comentario.usuarioId;
+
+      return (
+        <div
+          key={comentario.id}
+          className="bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-2xs relative"
+        >
+          <div className="flex items-start gap-2.5">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-2xs"
+              style={{ backgroundColor: obterCorAvatar(iniciais) }}
+            >
+              {iniciais}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                  {comentario.nomeUsuario}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                  {formatarDataComentario(comentario.criadoEm)}
+                </span>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 break-words leading-relaxed">
+                {comentario.conteudo}
+              </p>
+              {ehAutor && (
+                <button
+                  onClick={() => excluirComentario(comentario.id)}
+                  className="text-[11px] text-rose-500 hover:text-rose-600 mt-2 font-medium cursor-pointer"
+                >
+                  Excluir
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    });
+  };
+
   if (!aberto) return null;
 
-  const indicadorStatusAtual = INDICADORES_STATUS[status] || INDICADORES_STATUS.TODO;
+  const indicadorStatusAtual = INDICADORES_STATUS[status];
 
   return (
     <div
@@ -221,7 +307,9 @@ export function ModalTarefa({
       aria-labelledby="tarefa-modal-titulo"
       className="fixed inset-0 bg-slate-950/65 dark:bg-black/80 backdrop-blur-xs z-[100] flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto"
       onClick={(evento) => {
-        if (evento.target === evento.currentTarget) aoFechar();
+        if (evento.target === evento.currentTarget) {
+          aoFechar();
+        }
       }}
     >
       <div className="relative bg-[#FCFBF7] dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-amber-950/15 dark:border-slate-800 shadow-2xl flex flex-col surface-shadow my-auto">
@@ -236,6 +324,7 @@ export function ModalTarefa({
             />
           ))}
         </div>
+
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/90 dark:border-slate-800 sticky top-0 bg-[#FCFBF7]/95 dark:bg-slate-900/95 backdrop-blur-xs z-10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300/80 dark:border-emerald-800/80 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shadow-2xs">
@@ -273,6 +362,7 @@ export function ModalTarefa({
             <X className="w-5 h-5" />
           </button>
         </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 flex-1">
           <div className="lg:col-span-2 space-y-5">
             <form onSubmit={enviarFormulario} className="space-y-5 flex flex-col h-full">
@@ -291,7 +381,9 @@ export function ModalTarefa({
                     required
                   />
                 </div>
+
                 <SeletorEstiloCartao valor={estiloCartao} aoAlterar={setEstiloCartao} />
+
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     Descrição
@@ -304,6 +396,7 @@ export function ModalTarefa({
                     placeholder="Adicione observações, checklist ou detalhes desta tarefa (opcional)"
                   />
                 </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
@@ -335,6 +428,7 @@ export function ModalTarefa({
                     </select>
                   </div>
                 </div>
+
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     Etiquetas
@@ -346,7 +440,12 @@ export function ModalTarefa({
                         type="text"
                         value={entradaEtiqueta}
                         onChange={(evento) => setEntradaEtiqueta(evento.target.value)}
-                        onKeyDown={(evento) => evento.key === 'Enter' && (evento.preventDefault(), adicionarEtiqueta())}
+                        onKeyDown={(evento) => {
+                          if (evento.key === 'Enter') {
+                            evento.preventDefault();
+                            adicionarEtiqueta();
+                          }
+                        }}
                         className="w-full pl-10 pr-4 py-2.5 bg-white/90 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-600 dark:focus:border-emerald-500 shadow-2xs text-sm"
                         placeholder="Ex: Urgente, Estudo, Design"
                       />
@@ -383,6 +482,7 @@ export function ModalTarefa({
                     )}
                   </div>
                 </div>
+
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     Imagem Anexa (URL)
@@ -428,6 +528,7 @@ export function ModalTarefa({
                   )}
                 </div>
               </div>
+
               <div className="sticky bottom-0 z-10 mt-auto space-y-4 pt-4 pb-1 border-t border-slate-200 dark:border-slate-800 bg-[#FCFBF7]/95 dark:bg-slate-900/95 backdrop-blur-xs">
                 {tarefa && tarefa.criadoEm && (
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-between gap-2">
@@ -473,6 +574,7 @@ export function ModalTarefa({
               </div>
             </form>
           </div>
+
           {tarefa && (
             <div className="lg:col-span-1 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 pt-6 lg:pt-0 lg:pl-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">
@@ -488,70 +590,25 @@ export function ModalTarefa({
               </div>
 
               <div className="space-y-3 mb-4 flex-1 overflow-y-auto pr-1 max-h-[350px]">
-                {carregandoComentarios ? (
-                  <div className="text-center text-slate-500 dark:text-slate-400 text-xs py-6">
-                    Carregando comentários...
-                  </div>
-                ) : comentarios.length === 0 ? (
-                  <div className="text-center text-slate-400 dark:text-slate-500 text-xs py-8 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4">
-                    Nenhum comentário nesta tarefa.
-                  </div>
-                ) : (
-                  comentarios.map((comentario) => {
-                    const iniciais = obterIniciais(comentario.nomeUsuario || 'U');
-                    const ehAutor = usuario?.id === comentario.usuarioId;
-
-                    return (
-                      <div
-                        key={comentario.id}
-                        className="bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-2xs relative"
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-2xs"
-                            style={{ backgroundColor: obterCorAvatar(iniciais) }}
-                          >
-                            {iniciais}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                                {comentario.nomeUsuario}
-                              </span>
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                                {formatarDataComentario(comentario.criadoEm)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-700 dark:text-slate-300 break-words leading-relaxed">
-                              {comentario.conteudo}
-                            </p>
-                            {ehAutor && (
-                              <button
-                                onClick={() => excluirComentario(comentario.id)}
-                                className="text-[11px] text-rose-500 hover:text-rose-600 mt-2 font-medium cursor-pointer"
-                              >
-                                Excluir
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+                {renderizarComentarios()}
               </div>
+
               <div className="flex gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <input
                   type="text"
                   value={entradaComentario}
                   onChange={(evento) => setEntradaComentario(evento.target.value)}
-                  onKeyDown={(evento) => evento.key === 'Enter' && adicionarComentario()}
+                  onKeyDown={(evento) => {
+                    if (evento.key === 'Enter') {
+                      void adicionarComentario();
+                    }
+                  }}
                   placeholder="Escreva um comentário..."
                   className="flex-1 px-3 py-2 bg-white/90 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-600 dark:focus:border-emerald-500"
                 />
                 <button
                   type="button"
-                  onClick={adicionarComentario}
+                  onClick={() => void adicionarComentario()}
                   disabled={!entradaComentario.trim()}
                   aria-label="Enviar comentário"
                   className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center shadow-2xs"

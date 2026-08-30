@@ -1,33 +1,31 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { servicoTarefas } from '../services/servicoTarefas';
-import {
-  CriarTarefaDto,
-  StatusTarefa,
-  Tarefa,
-} from '../types/quadro';
+import { CriarTarefaDto, StatusTarefa, Tarefa } from '../types/quadro';
 
 export function useQuadro() {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  const carregarTarefas = useCallback(async () => {
-    setCarregando(true);
+  useEffect(() => {
+    const carregarTarefas = async () => {
+      setCarregando(true);
 
-    try {
-      setTarefas(await servicoTarefas.listar());
-    } catch (erro) {
-      console.error('Erro ao carregar tarefas:', erro);
-      toast.error('Não foi possível carregar as tarefas.');
-    } finally {
-      setCarregando(false);
-    }
+      try {
+        const tarefasCarregadas = await servicoTarefas.listar();
+        setTarefas(tarefasCarregadas);
+      } catch (erro) {
+        console.error('Erro ao carregar tarefas:', erro);
+        toast.error('Não foi possível carregar as tarefas.');
+      } finally {
+        setCarregando(false);
+      }
+    };
+
+    void carregarTarefas();
   }, []);
 
-  useEffect(() => {
-    carregarTarefas();
-  }, [carregarTarefas]);
-
+  // Usa uma posição entre os cartões vizinhos para evitar renumerar a coluna inteira.
   const calcularPosicao = (anterior?: Tarefa, proxima?: Tarefa) => {
     if (!anterior && proxima) return proxima.posicao / 2;
     if (anterior && !proxima) return anterior.posicao + 1;
@@ -42,6 +40,7 @@ export function useQuadro() {
   ) => {
     const estadoAnterior = [...tarefas];
     const tarefaMovida = tarefas.find((tarefa) => tarefa.id === tarefaId);
+
     if (!tarefaMovida) return;
 
     const tarefasDestino = estadoAnterior
@@ -95,9 +94,11 @@ export function useQuadro() {
       .sort((a, b) => a.posicao - b.posicao);
 
     const [tarefaMovida] = tarefasDaColuna.splice(indiceOrigem, 1);
+
     if (!tarefaMovida) return;
 
     tarefasDaColuna.splice(indiceDestino, 0, tarefaMovida);
+
     const posicao = calcularPosicao(
       tarefasDaColuna[indiceDestino - 1],
       tarefasDaColuna[indiceDestino + 1],
@@ -111,6 +112,7 @@ export function useQuadro() {
 
     try {
       const atualizada = await servicoTarefas.atualizar(tarefaMovida.id, { posicao });
+
       setTarefas((atuais) =>
         atuais.map((tarefa) =>
           tarefa.id === tarefaMovida.id ? { ...tarefa, ...atualizada } : tarefa,
@@ -150,21 +152,28 @@ export function useQuadro() {
               : tarefa,
           ),
         );
+
         toast.success('Tarefa atualizada com sucesso!');
         return;
       }
 
-      const status = dados.status || 'TODO';
+      const titulo = dados.titulo?.trim();
+
+      if (!titulo) {
+        throw new Error('O título da tarefa é obrigatório.');
+      }
+
+      const status = dados.status ?? 'TODO';
       const tarefasDoStatus = tarefas.filter((tarefa) => tarefa.status === status);
       const maiorPosicao = Math.max(0, ...tarefasDoStatus.map((tarefa) => tarefa.posicao));
 
       const criada = await servicoTarefas.criar({
-        titulo: dados.titulo!,
+        titulo,
         descricao: dados.descricao,
         status,
-        prioridade: dados.prioridade || 'Média',
-        estiloCartao: dados.estiloCartao || 'SPIRAL',
-        etiquetas: dados.etiquetas || [],
+        prioridade: dados.prioridade ?? 'Média',
+        estiloCartao: dados.estiloCartao ?? 'SPIRAL',
+        etiquetas: dados.etiquetas ?? [],
         imagemAnexa: dados.imagemAnexa,
         posicao: maiorPosicao + 1,
       });
@@ -198,6 +207,5 @@ export function useQuadro() {
     atualizarQuantidadeComentarios,
     salvarTarefa,
     excluirTarefa,
-    recarregarTarefas: carregarTarefas,
   };
 }
