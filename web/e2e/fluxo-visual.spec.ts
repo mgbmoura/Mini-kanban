@@ -1,10 +1,18 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:8080';
 const PASTA_CAPTURAS = 'artifacts/browser';
 
 mkdirSync(PASTA_CAPTURAS, { recursive: true });
+
+async function aguardarInterface(page: Page) {
+  await page.waitForTimeout(450);
+}
+
+async function aguardarToasts(page: Page) {
+  await expect(page.locator('[data-sonner-toast]')).toHaveCount(0, { timeout: 7000 });
+}
 
 test.use({
   viewport: { width: 1440, height: 1000 },
@@ -47,6 +55,7 @@ test('fluxo principal e telas do Mini Kanban', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'A Fazer' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Em Andamento' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Concluído' })).toBeVisible();
+  await aguardarToasts(page);
   await page.screenshot({ path: `${PASTA_CAPTURAS}/03-quadro-vazio.png`, fullPage: true });
 
   const colunaAFazer = page.getByTestId('kanban-column-TODO');
@@ -64,6 +73,7 @@ test('fluxo principal e telas do Mini Kanban', async ({ page }) => {
   await modal.getByRole('button', { name: 'Criar' }).click();
 
   await expect(colunaAFazer.getByText('Tarefa navegador CI', { exact: true })).toBeVisible();
+  await aguardarToasts(page);
   await page.screenshot({ path: `${PASTA_CAPTURAS}/05-quadro-com-tarefa.png`, fullPage: true });
 
   await colunaAFazer.getByText('Tarefa navegador CI', { exact: true }).click();
@@ -80,33 +90,52 @@ test('fluxo principal e telas do Mini Kanban', async ({ page }) => {
 
   const colunaEmAndamento = page.getByTestId('kanban-column-DOING');
   await expect(colunaEmAndamento.getByText('Tarefa navegador CI', { exact: true })).toBeVisible();
+  await aguardarToasts(page);
   await page.screenshot({ path: `${PASTA_CAPTURAS}/07-tarefa-em-andamento.png`, fullPage: true });
+
+  const cartaoArrastavel = colunaEmAndamento
+    .locator('[data-rfd-draggable-id]')
+    .filter({ hasText: 'Tarefa navegador CI' });
+  await expect(cartaoArrastavel).toBeVisible();
+  await cartaoArrastavel.focus();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Space');
+
+  const colunaConcluido = page.getByTestId('kanban-column-DONE');
+  await expect(colunaConcluido.getByText('Tarefa navegador CI', { exact: true })).toBeVisible();
+  await aguardarToasts(page);
+  await page.screenshot({ path: `${PASTA_CAPTURAS}/08-drag-and-drop-concluido.png`, fullPage: true });
 
   await page.getByRole('button', { name: 'Abrir menu' }).click();
   await page.getByRole('button', { name: 'Configurações' }).click();
   await expect(page).toHaveURL(/\/app\/settings$/);
   await expect(page.getByRole('heading', { name: 'Configurações' })).toBeVisible();
-  await page.screenshot({ path: `${PASTA_CAPTURAS}/08-configuracoes-claro.png`, fullPage: true });
+  await aguardarInterface(page);
+  await page.screenshot({ path: `${PASTA_CAPTURAS}/09-configuracoes-claro.png`, fullPage: true });
 
   await page.getByRole('button').filter({ hasText: 'Escuro' }).click();
   await expect(page.locator('html')).toHaveClass(/dark/);
-  await page.screenshot({ path: `${PASTA_CAPTURAS}/09-configuracoes-escuro.png`, fullPage: true });
+  await aguardarInterface(page);
+  await page.screenshot({ path: `${PASTA_CAPTURAS}/10-configuracoes-escuro.png`, fullPage: true });
 
   await page.getByLabel('Nome completo').fill('Navegador CI Atualizado');
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(page.getByLabel('Nome completo')).toHaveValue('Navegador CI Atualizado');
+  await aguardarToasts(page);
 
   await page.getByRole('button', { name: 'Abrir menu' }).click();
   await page.getByRole('button', { name: 'Sair' }).click();
   await expect(page).toHaveURL(/\/login$/);
+  await aguardarInterface(page);
 
   await page.getByRole('link', { name: 'Esqueceu sua senha?' }).click();
   await expect(page).toHaveURL(/\/forgot-password$/);
-  await page.screenshot({ path: `${PASTA_CAPTURAS}/10-esqueci-senha.png`, fullPage: true });
+  await page.screenshot({ path: `${PASTA_CAPTURAS}/11-esqueci-senha.png`, fullPage: true });
 
   await page.goto(`${BASE_URL}/reset-password?token=token-de-validacao`, { waitUntil: 'networkidle' });
   await expect(page).toHaveURL(/\/reset-password\?token=token-de-validacao$/);
-  await page.screenshot({ path: `${PASTA_CAPTURAS}/11-redefinir-senha.png`, fullPage: true });
+  await page.screenshot({ path: `${PASTA_CAPTURAS}/12-redefinir-senha.png`, fullPage: true });
 
   expect(errosDoNavegador, errosDoNavegador.join('\n')).toEqual([]);
 });
