@@ -56,7 +56,7 @@ describe('PaginaLogin', () => {
       expect(toast.success).toHaveBeenCalledWith('Conta criada com sucesso! Faça login para continuar.');
     });
 
-    expect(screen.getByText('Entre na sua conta para continuar')).toBeInTheDocument();
+    expect(await screen.findByText('Entre na sua conta para continuar')).toBeInTheDocument();
   });
 
   it('exibe a mensagem retornada quando o cadastro falha', async () => {
