@@ -79,6 +79,78 @@ jobs:
           cat /tmp/resposta.txt
           test "$codigo" = "401"
 
+      - name: Validar fluxo autenticado
+        run: |
+          set -euo pipefail
+          BASE=http://127.0.0.1:3000/api
+
+          curl --fail --silent -X POST "$BASE/auth/register" \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"Usuario CI","email":"usuario-ci@example.com","password":"senha123"}' > /tmp/usuario1.json
+
+          curl --fail --silent -X POST "$BASE/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"usuario-ci@example.com","password":"senha123"}' > /tmp/login1.json
+          TOKEN1=$(node -e "const x=require('/tmp/login1.json'); if(!x.accessToken) process.exit(1); process.stdout.write(x.accessToken)")
+
+          curl --fail --silent "$BASE/users/me" -H "Authorization: Bearer $TOKEN1" > /tmp/perfil.json
+          node -e "const x=require('/tmp/perfil.json'); if(x.email!=='usuario-ci@example.com'||x.password||x.passwordResetToken||x.passwordResetExpires) process.exit(1)"
+
+          curl --fail --silent -X POST "$BASE/tasks" \
+            -H "Authorization: Bearer $TOKEN1" \
+            -H 'Content-Type: application/json' \
+            -d '{"title":"Tarefa CI","description":"Fluxo de validacao","status":"TODO","priority":"Média","cardStyle":"SPIRAL","tags":["ci"],"position":1}' > /tmp/tarefa.json
+          TAREFA_ID=$(node -e "const x=require('/tmp/tarefa.json'); if(!x.id) process.exit(1); process.stdout.write(x.id)")
+
+          curl --fail --silent "$BASE/tasks" -H "Authorization: Bearer $TOKEN1" > /tmp/tarefas.json
+          node -e "const x=require('/tmp/tarefas.json'); if(!Array.isArray(x)||!x.some(t=>t.id===process.env.TAREFA_ID&&t.title==='Tarefa CI')) process.exit(1)" TAREFA_ID="$TAREFA_ID"
+
+          curl --fail --silent -X PATCH "$BASE/tasks/$TAREFA_ID" \
+            -H "Authorization: Bearer $TOKEN1" \
+            -H 'Content-Type: application/json' \
+            -d '{"status":"DOING","title":"Tarefa CI atualizada"}' > /tmp/tarefa-atualizada.json
+          node -e "const x=require('/tmp/tarefa-atualizada.json'); if(x.status!=='DOING'||x.title!=='Tarefa CI atualizada') process.exit(1)"
+
+          curl --fail --silent -X POST "$BASE/tasks/$TAREFA_ID/comments" \
+            -H "Authorization: Bearer $TOKEN1" \
+            -H 'Content-Type: application/json' \
+            -d '{"content":"Comentario CI"}' > /tmp/comentario.json
+          COMENTARIO_ID=$(node -e "const x=require('/tmp/comentario.json'); if(!x.id) process.exit(1); process.stdout.write(x.id)")
+
+          curl --fail --silent "$BASE/tasks/$TAREFA_ID/comments" -H "Authorization: Bearer $TOKEN1" > /tmp/comentarios.json
+          node -e "const x=require('/tmp/comentarios.json'); if(!Array.isArray(x)||!x.some(c=>c.content==='Comentario CI')) process.exit(1)"
+
+          curl --fail --silent -X PATCH "$BASE/users/me" \
+            -H "Authorization: Bearer $TOKEN1" \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"Usuario CI Atualizado"}' > /tmp/perfil-atualizado.json
+          node -e "const x=require('/tmp/perfil-atualizado.json'); if(x.name!=='Usuario CI Atualizado'||x.password) process.exit(1)"
+
+          curl --fail --silent -X POST "$BASE/auth/register" \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"Outro Usuario","email":"outro-ci@example.com","password":"senha123"}' > /tmp/usuario2.json
+          curl --fail --silent -X POST "$BASE/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"outro-ci@example.com","password":"senha123"}' > /tmp/login2.json
+          TOKEN2=$(node -e "const x=require('/tmp/login2.json'); if(!x.accessToken) process.exit(1); process.stdout.write(x.accessToken)")
+
+          codigo=$(curl --silent --output /tmp/sem-permissao.txt --write-out "%{http_code}" -X PATCH "$BASE/tasks/$TAREFA_ID" \
+            -H "Authorization: Bearer $TOKEN2" \
+            -H 'Content-Type: application/json' \
+            -d '{"title":"Nao pode alterar"}')
+          test "$codigo" = "403"
+
+          codigo=$(curl --silent --output /tmp/comentarios-sem-acesso.txt --write-out "%{http_code}" "$BASE/tasks/$TAREFA_ID/comments" \
+            -H "Authorization: Bearer $TOKEN2")
+          test "$codigo" = "404"
+
+          curl --fail --silent -X DELETE "$BASE/comments/$COMENTARIO_ID" -H "Authorization: Bearer $TOKEN1" > /dev/null
+          codigo=$(curl --silent --output /tmp/tarefa-removida.txt --write-out "%{http_code}" -X DELETE "$BASE/tasks/$TAREFA_ID" -H "Authorization: Bearer $TOKEN1")
+          test "$codigo" = "204"
+
+          curl --fail --silent "$BASE/tasks" -H "Authorization: Bearer $TOKEN1" > /tmp/tarefas-finais.json
+          node -e "const x=require('/tmp/tarefas-finais.json'); if(!Array.isArray(x)||x.length!==0) process.exit(1)"
+
       - name: Encerrar API
         if: always()
         run: |
