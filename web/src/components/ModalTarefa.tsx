@@ -428,7 +428,7 @@ export function ModalTarefa({
                   )}
                 </div>
               </div>
-              <div className="mt-auto space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="sticky bottom-0 z-10 mt-auto space-y-4 pt-4 pb-1 border-t border-slate-200 dark:border-slate-800 bg-[#FCFBF7]/95 dark:bg-slate-900/95 backdrop-blur-xs">
                 {tarefa && tarefa.criadoEm && (
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-between gap-2">
                     <span className="flex items-center gap-1">

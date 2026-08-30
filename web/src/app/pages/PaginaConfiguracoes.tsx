@@ -1,7 +1,7 @@
 import { Info, Loader2, Palette, Save, User as IconeUsuario } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { EsqueletoConfiguracoes } from '../../components/EsqueletoConfiguracoes';
+import { SkeletonConfiguracoes } from '../../components/SkeletonConfiguracoes';
 import { IconeMascote } from '../../components/IconeMascote';
 import { useAutenticacao } from '../../contexts/ContextoAutenticacao';
 import { useTema } from '../../contexts/ContextoTema';
@@ -36,7 +36,7 @@ export function PaginaConfiguracoes() {
     }
   };
 
-  if (carregando) return <EsqueletoConfiguracoes />;
+  if (carregando) return <SkeletonConfiguracoes />;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300 p-4 sm:p-6">

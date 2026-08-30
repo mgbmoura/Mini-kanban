@@ -33,7 +33,7 @@ export function Cabecalho({ aoAbrirMenu, usuario }: CabecalhoProps) {
         <div className="flex items-center justify-center transition-transform hover:scale-105">
           <IconeMascote className="w-9 h-9 drop-shadow-xs" />
         </div>
-        <h1 className="text-xl font-bold text-foreground">Mini-Kanban</h1>
+        <h1 className="text-xl font-bold text-foreground">Mini Kanban</h1>
       </div>
 
       <div className="flex items-center gap-4">

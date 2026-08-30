@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { EsqueletoQuadro } from '../../components/EsqueletoQuadro';
+import { SkeletonQuadro } from '../../components/SkeletonQuadro';
 import { ModalTarefa } from '../../components/ModalTarefa';
 import { QuadroKanban } from '../../components/QuadroKanban';
 import { useQuadro } from '../../hooks/useQuadro';
@@ -46,7 +46,7 @@ export function PaginaQuadro() {
     fecharModal();
   };
 
-  if (carregando) return <EsqueletoQuadro />;
+  if (carregando) return <SkeletonQuadro />;
 
   return (
     <>

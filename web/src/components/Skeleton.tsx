@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 
-export function Esqueleto({ className = '', ...props }: ComponentProps<'div'>) {
+export function Skeleton({ className = '', ...props }: ComponentProps<'div'>) {
   return (
     <div
       data-slot="skeleton"

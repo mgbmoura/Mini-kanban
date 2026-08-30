@@ -53,7 +53,7 @@ export function BarraLateral({ aberta, aoFechar, aoSair, usuario }: BarraLateral
         <div className="flex items-center p-4 border-b border-border">
           <div className="flex items-center gap-2.5">
             <IconeMascote className="w-7 h-7 drop-shadow-2xs" />
-            <h2 className="font-bold text-base text-foreground">Mini-Kanban</h2>
+            <h2 className="font-bold text-base text-foreground">Mini Kanban</h2>
           </div>
         </div>
 

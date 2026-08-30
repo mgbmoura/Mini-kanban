@@ -1,4 +1,3 @@
-
 const SkeletonCard = () => (
   <div className="bg-gray-700/50 p-4 rounded-lg shadow space-y-3">
     <div className="flex justify-between">
@@ -13,7 +12,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-export function EsqueletoQuadro() {
+export function SkeletonQuadro() {
   return (
     <div className="flex-1 p-4 sm:p-6 lg:p-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
