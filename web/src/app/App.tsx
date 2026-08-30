@@ -1,5 +1,4 @@
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { SkeletonLogin } from '../components/SkeletonLogin';
 import { LayoutPrincipal } from '../components/LayoutPrincipal';
 import { Notificacoes } from '../components/Notificacoes';
 import { ProvedorAutenticacao, useAutenticacao } from '../contexts/ContextoAutenticacao';
@@ -10,20 +9,12 @@ import { PaginaQuadro } from './pages/PaginaQuadro';
 import { PaginaRedefinirSenha } from './pages/PaginaRedefinirSenha';
 
 function RoteadorAplicacao() {
-  const { usuario, carregando } = useAutenticacao();
-
-  if (carregando) return <SkeletonLogin />;
+  const { usuario } = useAutenticacao();
 
   const roteador = createBrowserRouter([
     { path: '/', element: <Navigate to={usuario ? '/app' : '/login'} replace /> },
-    {
-      path: '/login',
-      element: !usuario ? <PaginaLogin /> : <Navigate to="/app" replace />,
-    },
-    {
-      path: '/register',
-      element: !usuario ? <PaginaLogin /> : <Navigate to="/app" replace />,
-    },
+    { path: '/login', element: !usuario ? <PaginaLogin /> : <Navigate to="/app" replace /> },
+    { path: '/register', element: !usuario ? <PaginaLogin /> : <Navigate to="/app" replace /> },
     {
       path: '/app',
       element: usuario ? <LayoutPrincipal /> : <Navigate to="/login" replace />,

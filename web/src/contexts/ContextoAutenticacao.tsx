@@ -4,19 +4,16 @@ import { Usuario } from '../types/usuario';
 
 interface ContextoAutenticacaoValor {
   usuario: Usuario | null;
-  carregando: boolean;
   entrar: (credenciais: { email: string; senha: string }) => Promise<Usuario>;
   cadastrar: (nome: string, email: string, senha: string) => Promise<void>;
   sair: () => void;
   atualizarPerfil: (dados: { nome?: string; urlAvatar?: string }) => Promise<Usuario>;
-  atualizarUsuarioSalvo: () => void;
 }
 
 const ContextoAutenticacao = createContext<ContextoAutenticacaoValor | undefined>(undefined);
 
 export function ProvedorAutenticacao({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(() => servicoAutenticacao.obterUsuario());
-  const [carregando] = useState(false);
 
   const entrar = async (credenciais: { email: string; senha: string }) => {
     const usuarioAutenticado = await servicoAutenticacao.entrar(credenciais);
@@ -38,21 +35,9 @@ export function ProvedorAutenticacao({ children }: { children: React.ReactNode }
     return usuarioAtualizado;
   };
 
-  const atualizarUsuarioSalvo = () => {
-    setUsuario(servicoAutenticacao.obterUsuario());
-  };
-
   return (
     <ContextoAutenticacao.Provider
-      value={{
-        usuario,
-        carregando,
-        entrar,
-        cadastrar,
-        sair,
-        atualizarPerfil,
-        atualizarUsuarioSalvo,
-      }}
+      value={{ usuario, entrar, cadastrar, sair, atualizarPerfil }}
     >
       {children}
     </ContextoAutenticacao.Provider>

@@ -1,27 +1,23 @@
 import { Info, Loader2, Palette, Save, User as IconeUsuario } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
-import { SkeletonConfiguracoes } from '../../components/SkeletonConfiguracoes';
 import { IconeMascote } from '../../components/IconeMascote';
 import { useAutenticacao } from '../../contexts/ContextoAutenticacao';
 import { useTema } from '../../contexts/ContextoTema';
 
 export function PaginaConfiguracoes() {
-  const { usuario, atualizarPerfil, carregando } = useAutenticacao();
+  const { usuario, atualizarPerfil } = useAutenticacao();
   const { tema, definirTema } = useTema();
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [avatar, setAvatar] = useState('');
+  const [nome, setNome] = useState(usuario?.nome ?? '');
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
-    if (!usuario) return;
-    setNome(usuario.nome);
-    setEmail(usuario.email);
-    setAvatar(usuario.urlAvatar || '');
+    if (usuario) {
+      setNome(usuario.nome);
+    }
   }, [usuario]);
 
-  const salvar = async (evento: React.FormEvent) => {
+  const salvar = async (evento: FormEvent) => {
     evento.preventDefault();
     setSalvando(true);
 
@@ -36,7 +32,8 @@ export function PaginaConfiguracoes() {
     }
   };
 
-  if (carregando) return <SkeletonConfiguracoes />;
+  const email = usuario?.email ?? '';
+  const avatar = usuario?.urlAvatar ?? '';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300 p-4 sm:p-6">
