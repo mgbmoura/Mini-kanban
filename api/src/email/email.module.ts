@@ -8,25 +8,31 @@ import { join } from 'path';
   imports: [
     MailerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configuracao: ConfigService) => ({
-        transport: {
-          host: configuracao.get('MAIL_HOST'),
-          port: configuracao.get<number>('MAIL_PORT'),
-          secure: configuracao.get('MAIL_SECURE') === 'true',
-          auth: {
-            user: configuracao.get('MAIL_USER'),
-            pass: configuracao.get('MAIL_PASS'),
+      useFactory: (configuracao: ConfigService) => {
+        const host = configuracao.getOrThrow<string>('MAIL_HOST');
+        const port = Number(configuracao.getOrThrow<string>('MAIL_PORT'));
+        const secure = configuracao.getOrThrow<string>('MAIL_SECURE') === 'true';
+        const user = configuracao.getOrThrow<string>('MAIL_USER');
+        const pass = configuracao.getOrThrow<string>('MAIL_PASS');
+        const from = configuracao.getOrThrow<string>('MAIL_FROM');
+
+        return {
+          transport: {
+            host,
+            port,
+            secure,
+            auth: { user, pass },
           },
-        },
-        defaults: {
-          from: `'Mini Kanban' <${configuracao.get('MAIL_FROM')}>`,
-        },
-        template: {
-          dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter(),
-          options: { strict: true },
-        },
-      }),
+          defaults: {
+            from: `'Mini Kanban' <${from}>`,
+          },
+          template: {
+            dir: join(__dirname, 'templates'),
+            adapter: new HandlebarsAdapter(),
+            options: { strict: true },
+          },
+        };
+      },
     }),
   ],
   exports: [MailerModule],

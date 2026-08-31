@@ -1,5 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
@@ -16,6 +17,7 @@ export class AutenticacaoService {
     private readonly usuariosService: UsuariosService,
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
+    private readonly configuracao: ConfigService,
   ) {}
 
   async entrar(credenciais: EntrarDto) {
@@ -61,7 +63,7 @@ export class AutenticacaoService {
 
     await this.usuariosService.salvarTokenRedefinicao(dados.email, tokenHash, expiraEm);
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = this.configuracao.getOrThrow<string>('FRONTEND_URL');
     const link = `${frontendUrl}/reset-password?token=${token}`;
 
     try {
