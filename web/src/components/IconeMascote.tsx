@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface IconeMascoteProps {
   className?: string;
   size?: number | string;
