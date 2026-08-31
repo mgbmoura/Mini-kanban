@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { SkeletonQuadro } from '../../components/SkeletonQuadro';
 import { ModalTarefa } from '../../components/ModalTarefa';
 import { QuadroKanban } from '../../components/QuadroKanban';
+import { SkeletonQuadro } from '../../components/SkeletonQuadro';
 import { useQuadro } from '../../hooks/useQuadro';
 import { StatusTarefa, Tarefa } from '../../types/quadro';
 
@@ -36,7 +36,7 @@ export function PaginaQuadro() {
     setTarefaSelecionada(undefined);
   };
 
-  const salvar = async (dados: Partial<Tarefa> & { quantidadeComentarios?: number }) => {
+  const salvar = async (dados: Partial<Tarefa>) => {
     await salvarTarefa(dados);
     fecharModal();
   };

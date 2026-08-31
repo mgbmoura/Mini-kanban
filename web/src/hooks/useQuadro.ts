@@ -134,22 +134,16 @@ export function useQuadro() {
   };
 
   const salvarTarefa = async (
-    dados: (Partial<Tarefa> | CriarTarefaDto) & { id?: string; quantidadeComentarios?: number },
+    dados: (Partial<Tarefa> | CriarTarefaDto) & { id?: string },
   ) => {
     try {
       if (dados.id) {
-        const { id, quantidadeComentarios, ...alteracoes } = dados;
+        const { id, ...alteracoes } = dados;
         const atualizada = await servicoTarefas.atualizar(id, alteracoes);
 
         setTarefas((atuais) =>
           atuais.map((tarefa) =>
-            tarefa.id === id
-              ? {
-                  ...tarefa,
-                  ...atualizada,
-                  quantidadeComentarios: quantidadeComentarios ?? tarefa.quantidadeComentarios,
-                }
-              : tarefa,
+            tarefa.id === id ? { ...tarefa, ...atualizada } : tarefa,
           ),
         );
 
