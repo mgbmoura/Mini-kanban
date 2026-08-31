@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, type User } from '@prisma/client';
+import { type User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -41,36 +41,16 @@ export class UsuariosService {
     return this.removerDadosSensiveis(usuario);
   }
 
-  async buscarPorEmail(email: string) {
-    let usuario = await this.prisma.user.findUnique({ where: { email } });
-
-    if (usuario && !usuario.avatarUrl) {
-      usuario = await this.prisma.user.update({
-        where: { id: usuario.id },
-        data: { avatarUrl: this.gerarUrlGravatar(usuario.email) },
-      });
-    }
-
-    return usuario;
+  buscarPorEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   async atualizar(id: string, dados: AtualizarUsuarioDto) {
-    const atualizacao: Prisma.UserUpdateInput = { ...dados };
-
-    if (dados.password) {
-      atualizacao.password = await bcrypt.hash(dados.password, 10);
-    }
-
     const usuario = await this.prisma.user.update({
       where: { id },
-      data: atualizacao,
+      data: { name: dados.name },
     });
 
-    return this.removerDadosSensiveis(usuario);
-  }
-
-  async remover(id: string) {
-    const usuario = await this.prisma.user.delete({ where: { id } });
     return this.removerDadosSensiveis(usuario);
   }
 

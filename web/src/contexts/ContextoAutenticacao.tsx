@@ -7,7 +7,7 @@ interface ContextoAutenticacaoValor {
   entrar: (credenciais: { email: string; senha: string }) => Promise<Usuario>;
   cadastrar: (nome: string, email: string, senha: string) => Promise<void>;
   sair: () => void;
-  atualizarPerfil: (dados: { nome?: string; urlAvatar?: string }) => Promise<Usuario>;
+  atualizarPerfil: (dados: { nome: string }) => Promise<Usuario>;
 }
 
 const ContextoAutenticacao = createContext<ContextoAutenticacaoValor | undefined>(undefined);
@@ -29,7 +29,7 @@ export function ProvedorAutenticacao({ children }: { children: React.ReactNode }
     setUsuario(null);
   };
 
-  const atualizarPerfil = async (dados: { nome?: string; urlAvatar?: string }) => {
+  const atualizarPerfil = async (dados: { nome: string }) => {
     const usuarioAtualizado = await servicoAutenticacao.atualizarPerfil(dados);
     setUsuario(usuarioAtualizado);
     return usuarioAtualizado;

@@ -1,6 +1,7 @@
 import { Usuario } from '../types/usuario';
 import api from './api';
 
+const CHAVE_TOKEN = 'accessToken';
 const CHAVE_USUARIO = 'mini-kanban-user';
 
 interface UsuarioApi {
@@ -8,6 +9,11 @@ interface UsuarioApi {
   name: string;
   email: string;
   avatarUrl?: string;
+}
+
+interface RespostaLoginApi {
+  accessToken: string;
+  user: UsuarioApi;
 }
 
 function converterUsuario(usuario: UsuarioApi): Usuario {
@@ -19,41 +25,42 @@ function converterUsuario(usuario: UsuarioApi): Usuario {
   };
 }
 
-function converterUsuarioParaApi(dados: { nome?: string; urlAvatar?: string }) {
-  return {
-    name: dados.nome,
-    avatarUrl: dados.urlAvatar,
-  };
-}
-
 function salvarUsuario(usuario: Usuario) {
   localStorage.setItem(CHAVE_USUARIO, JSON.stringify(usuario));
 }
 
+function limparSessao() {
+  localStorage.removeItem(CHAVE_TOKEN);
+  localStorage.removeItem(CHAVE_USUARIO);
+}
+
 export const servicoAutenticacao = {
   async entrar(credenciais: { email: string; senha: string }): Promise<Usuario> {
-    const resposta = await api.post('/auth/login', { email: credenciais.email, password: credenciais.senha });
-    const { accessToken, user } = resposta.data as { accessToken?: string; user?: UsuarioApi };
+    const resposta = await api.post<RespostaLoginApi>('/auth/login', {
+      email: credenciais.email,
+      password: credenciais.senha,
+    });
+
+    const { accessToken, user } = resposta.data;
 
     if (!accessToken || !user?.email) {
       throw new Error('Resposta de login inválida do servidor.');
     }
 
     const usuario = converterUsuario(user);
-    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem(CHAVE_TOKEN, accessToken);
     salvarUsuario(usuario);
     return usuario;
   },
 
   sair() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem(CHAVE_USUARIO);
+    limparSessao();
   },
 
   obterUsuario(): Usuario | null {
     const usuarioSalvo = localStorage.getItem(CHAVE_USUARIO);
 
-    if (!usuarioSalvo || usuarioSalvo === 'undefined') {
+    if (!usuarioSalvo) {
       return null;
     }
 
@@ -61,13 +68,13 @@ export const servicoAutenticacao = {
       return JSON.parse(usuarioSalvo) as Usuario;
     } catch (erro) {
       console.error('Não foi possível recuperar o usuário salvo.', erro);
-      this.sair();
+      limparSessao();
       return null;
     }
   },
 
-  async atualizarPerfil(dados: { nome?: string; urlAvatar?: string }): Promise<Usuario> {
-    const resposta = await api.patch<UsuarioApi>('/users/me', converterUsuarioParaApi(dados));
+  async atualizarPerfil(dados: { nome: string }): Promise<Usuario> {
+    const resposta = await api.patch<UsuarioApi>('/users/me', { name: dados.nome });
     const usuario = converterUsuario(resposta.data);
     salvarUsuario(usuario);
     return usuario;
