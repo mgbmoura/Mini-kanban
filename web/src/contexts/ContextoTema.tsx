@@ -19,7 +19,7 @@ export function ProvedorTema({ children }: { children: ReactNode }) {
   const [tema, setTema] = useState<Tema>(obterTemaSalvo);
 
   useEffect(() => {
-    const raiz = document.documentElement;
+    const raiz = window.document.documentElement;
     raiz.classList.remove('light', 'dark');
     raiz.classList.add(tema);
   }, [tema]);
