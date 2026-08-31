@@ -11,7 +11,7 @@ export function LayoutPrincipal() {
   if (!usuario) return null;
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
       <BarraLateral
         aberta={menuAberto}
         aoFechar={() => setMenuAberto(false)}
