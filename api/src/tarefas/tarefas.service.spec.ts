@@ -1,16 +1,17 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
 import { CardStyle, TaskStatus } from '@prisma/client';
-import { TarefasRepository } from './tarefas.repository';
+import { PrismaService } from '../prisma/prisma.service';
 import { TarefasService } from './tarefas.service';
 
-const repositorioTarefasMock = {
-  criar: jest.fn(),
-  listarPorUsuario: jest.fn(),
-  buscarPorId: jest.fn(),
-  atualizar: jest.fn(),
-  remover: jest.fn(),
+const taskMock = {
+  create: jest.fn(),
+  findMany: jest.fn(),
+  findUnique: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
 };
+
+const prismaMock = { task: taskMock } as unknown as PrismaService;
 
 const tarefaMock = {
   id: 'tarefa-1',
@@ -25,19 +26,10 @@ const tarefaMock = {
 
 describe('TarefasService', () => {
   let service: TarefasService;
-  let repositorio: typeof repositorioTarefasMock;
 
-  beforeEach(async () => {
-    const modulo: TestingModule = await Test.createTestingModule({
-      providers: [
-        TarefasService,
-        { provide: TarefasRepository, useValue: repositorioTarefasMock },
-      ],
-    }).compile();
-
-    service = modulo.get(TarefasService);
-    repositorio = modulo.get(TarefasRepository);
+  beforeEach(() => {
     jest.clearAllMocks();
+    service = new TarefasService(prismaMock);
   });
 
   it('deve ser criado', () => {
@@ -46,37 +38,42 @@ describe('TarefasService', () => {
 
   it('deve criar uma tarefa', async () => {
     const dados = { title: 'Tarefa de teste', status: TaskStatus.TODO };
-    repositorio.criar.mockResolvedValue(tarefaMock);
+    taskMock.create.mockResolvedValue(tarefaMock);
 
     const resultado = await service.criar(dados, 'usuario-1');
 
     expect(resultado).toEqual(tarefaMock);
-    expect(repositorio.criar).toHaveBeenCalledWith(dados, 'usuario-1');
+    expect(taskMock.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { ...dados, user: { connect: { id: 'usuario-1' } } },
+      }),
+    );
   });
 
   it('deve listar as tarefas do usuário', async () => {
-    repositorio.listarPorUsuario.mockResolvedValue([tarefaMock]);
+    taskMock.findMany.mockResolvedValue([tarefaMock]);
 
     const resultado = await service.listar('usuario-1');
 
     expect(resultado).toEqual([tarefaMock]);
-    expect(repositorio.listarPorUsuario).toHaveBeenCalledWith('usuario-1');
+    expect(taskMock.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'usuario-1' } }),
+    );
   });
 
   it('deve atualizar uma tarefa do usuário', async () => {
     const dados = { title: 'Título atualizado' };
     const tarefaAtualizada = { ...tarefaMock, ...dados };
-    repositorio.buscarPorId.mockResolvedValue(tarefaMock);
-    repositorio.atualizar.mockResolvedValue(tarefaAtualizada);
+    taskMock.findUnique.mockResolvedValue(tarefaMock);
+    taskMock.update.mockResolvedValue(tarefaAtualizada);
 
     const resultado = await service.atualizar('tarefa-1', 'usuario-1', dados);
 
     expect(resultado).toEqual(tarefaAtualizada);
-    expect(repositorio.atualizar).toHaveBeenCalledWith('tarefa-1', dados);
   });
 
   it('deve impedir atualização de tarefa inexistente', async () => {
-    repositorio.buscarPorId.mockResolvedValue(null);
+    taskMock.findUnique.mockResolvedValue(null);
 
     await expect(
       service.atualizar('tarefa-inexistente', 'usuario-1', { title: 'Novo título' }),
@@ -84,7 +81,7 @@ describe('TarefasService', () => {
   });
 
   it('deve impedir atualização de tarefa de outro usuário', async () => {
-    repositorio.buscarPorId.mockResolvedValue(tarefaMock);
+    taskMock.findUnique.mockResolvedValue(tarefaMock);
 
     await expect(
       service.atualizar('tarefa-1', 'outro-usuario', { title: 'Novo título' }),
@@ -92,17 +89,17 @@ describe('TarefasService', () => {
   });
 
   it('deve remover uma tarefa do usuário', async () => {
-    repositorio.buscarPorId.mockResolvedValue(tarefaMock);
-    repositorio.remover.mockResolvedValue(tarefaMock);
+    taskMock.findUnique.mockResolvedValue(tarefaMock);
+    taskMock.delete.mockResolvedValue(tarefaMock);
 
     const resultado = await service.remover('tarefa-1', 'usuario-1');
 
     expect(resultado).toEqual(tarefaMock);
-    expect(repositorio.remover).toHaveBeenCalledWith('tarefa-1');
+    expect(taskMock.delete).toHaveBeenCalledWith({ where: { id: 'tarefa-1' } });
   });
 
   it('deve impedir remoção de tarefa inexistente', async () => {
-    repositorio.buscarPorId.mockResolvedValue(null);
+    taskMock.findUnique.mockResolvedValue(null);
 
     await expect(service.remover('tarefa-inexistente', 'usuario-1')).rejects.toThrow(
       NotFoundException,
@@ -110,7 +107,7 @@ describe('TarefasService', () => {
   });
 
   it('deve impedir remoção de tarefa de outro usuário', async () => {
-    repositorio.buscarPorId.mockResolvedValue(tarefaMock);
+    taskMock.findUnique.mockResolvedValue(tarefaMock);
 
     await expect(service.remover('tarefa-1', 'outro-usuario')).rejects.toThrow(
       ForbiddenException,

@@ -3,7 +3,6 @@ import { BadRequestException, Injectable, Logger, UnauthorizedException } from '
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
-import { UsuariosRepository } from '../usuarios/usuarios.repository';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { EntrarDto } from './dto/entrar.dto';
 import { EsqueciSenhaDto } from './dto/esqueci-senha.dto';
@@ -15,7 +14,6 @@ export class AutenticacaoService {
 
   constructor(
     private readonly usuariosService: UsuariosService,
-    private readonly usuariosRepository: UsuariosRepository,
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
@@ -61,10 +59,7 @@ export class AutenticacaoService {
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expiraEm = new Date(Date.now() + 60 * 60 * 1000);
 
-    await this.usuariosRepository.atualizarPorEmail(dados.email, {
-      passwordResetToken: tokenHash,
-      passwordResetExpires: expiraEm,
-    });
+    await this.usuariosService.salvarTokenRedefinicao(dados.email, tokenHash, expiraEm);
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const link = `${frontendUrl}/reset-password?token=${token}`;
@@ -83,18 +78,12 @@ export class AutenticacaoService {
 
   async redefinirSenha(dados: RedefinirSenhaDto): Promise<void> {
     const tokenHash = crypto.createHash('sha256').update(dados.token).digest('hex');
-    const usuario = await this.usuariosRepository.buscarPorTokenRedefinicaoValido(tokenHash);
+    const usuario = await this.usuariosService.buscarPorTokenRedefinicaoValido(tokenHash);
 
     if (!usuario) {
       throw new BadRequestException('Token de recuperação inválido ou expirado.');
     }
 
-    const senhaCriptografada = await bcrypt.hash(dados.password, 10);
-
-    await this.usuariosRepository.atualizar(usuario.id, {
-      password: senhaCriptografada,
-      passwordResetToken: null,
-      passwordResetExpires: null,
-    });
+    await this.usuariosService.redefinirSenha(usuario.id, dados.password);
   }
 }

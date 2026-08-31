@@ -1,13 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ComentariosService } from './comentarios.service';
 import { ComentariosController } from './comentarios.controller';
-import { ComentariosRepository } from './comentarios.repository';
-import { TarefasModule } from '../tarefas/tarefas.module';
+import { ComentariosService } from './comentarios.service';
 
 @Module({
-  imports: [TarefasModule],
   controllers: [ComentariosController],
-  providers: [ComentariosService, ComentariosRepository],
-  exports: [ComentariosService, ComentariosRepository],
+  providers: [ComentariosService],
 })
 export class ComentariosModule {}

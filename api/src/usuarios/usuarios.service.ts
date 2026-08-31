@@ -2,16 +2,16 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Prisma, type User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
+import { PrismaService } from '../prisma/prisma.service';
 import { AtualizarUsuarioDto } from './dto/atualizar-usuario.dto';
 import { CriarUsuarioDto } from './dto/criar-usuario.dto';
-import { UsuariosRepository } from './usuarios.repository';
 
 @Injectable()
 export class UsuariosService {
-  constructor(private readonly usuariosRepository: UsuariosRepository) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async criar(dados: CriarUsuarioDto) {
-    const usuarioExistente = await this.usuariosRepository.buscarPorEmail(dados.email);
+    const usuarioExistente = await this.prisma.user.findUnique({ where: { email: dados.email } });
 
     if (usuarioExistente) {
       throw new ConflictException('Este e-mail já está em uso.');
@@ -19,18 +19,20 @@ export class UsuariosService {
 
     const senhaCriptografada = await bcrypt.hash(dados.password, 10);
 
-    const usuario = await this.usuariosRepository.criar({
-      name: dados.name,
-      email: dados.email,
-      password: senhaCriptografada,
-      avatarUrl: this.gerarUrlGravatar(dados.email),
+    const usuario = await this.prisma.user.create({
+      data: {
+        name: dados.name,
+        email: dados.email,
+        password: senhaCriptografada,
+        avatarUrl: this.gerarUrlGravatar(dados.email),
+      },
     });
 
     return this.removerDadosSensiveis(usuario);
   }
 
   async buscarPorId(id: string) {
-    const usuario = await this.usuariosRepository.buscarPorId(id);
+    const usuario = await this.prisma.user.findUnique({ where: { id } });
 
     if (!usuario) {
       throw new NotFoundException('Usuário não encontrado.');
@@ -40,11 +42,12 @@ export class UsuariosService {
   }
 
   async buscarPorEmail(email: string) {
-    let usuario = await this.usuariosRepository.buscarPorEmail(email);
+    let usuario = await this.prisma.user.findUnique({ where: { email } });
 
     if (usuario && !usuario.avatarUrl) {
-      usuario = await this.usuariosRepository.atualizar(usuario.id, {
-        avatarUrl: this.gerarUrlGravatar(usuario.email),
+      usuario = await this.prisma.user.update({
+        where: { id: usuario.id },
+        data: { avatarUrl: this.gerarUrlGravatar(usuario.email) },
       });
     }
 
@@ -58,13 +61,49 @@ export class UsuariosService {
       atualizacao.password = await bcrypt.hash(dados.password, 10);
     }
 
-    const usuario = await this.usuariosRepository.atualizar(id, atualizacao);
+    const usuario = await this.prisma.user.update({
+      where: { id },
+      data: atualizacao,
+    });
+
     return this.removerDadosSensiveis(usuario);
   }
 
   async remover(id: string) {
-    const usuario = await this.usuariosRepository.remover(id);
+    const usuario = await this.prisma.user.delete({ where: { id } });
     return this.removerDadosSensiveis(usuario);
+  }
+
+  salvarTokenRedefinicao(email: string, token: string, expiraEm: Date) {
+    return this.prisma.user.update({
+      where: { email },
+      data: {
+        passwordResetToken: token,
+        passwordResetExpires: expiraEm,
+      },
+    });
+  }
+
+  buscarPorTokenRedefinicaoValido(token: string) {
+    return this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpires: { gte: new Date() },
+      },
+    });
+  }
+
+  async redefinirSenha(id: string, novaSenha: string) {
+    const senhaCriptografada = await bcrypt.hash(novaSenha, 10);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        password: senhaCriptografada,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
+    });
   }
 
   private gerarUrlGravatar(email: string) {
