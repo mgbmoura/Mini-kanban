@@ -53,6 +53,8 @@ mini-kanban/
 │       ├── prisma/
 │       ├── tarefas/
 │       └── usuarios/
+├── docs/
+│   └── CONSTRUINDO_DO_ZERO.md
 ├── web/
 │   └── src/
 │       ├── app/
@@ -66,6 +68,10 @@ mini-kanban/
 ```
 
 No frontend, as nomenclaturas do domínio são mantidas em português. Os serviços HTTP fazem a conversão entre os modelos usados pela interface e o contrato da API, preservando campos e rotas existentes.
+
+## Documentação
+
+- [Construindo o Mini Kanban do Zero](docs/CONSTRUINDO_DO_ZERO.md) — guia didático que reconstrói o projeto de forma progressiva, explicando o problema que motivou cada decisão, os principais fluxos, checkpoints de aprendizado e perguntas para entrevista.
 
 ## Executando com Docker
 
