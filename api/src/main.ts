@@ -3,26 +3,25 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+async function iniciarAplicacao() {
+  const aplicativo = await NestFactory.create(AppModule);
 
-  // Habilita CORS para permitir chamadas do frontend
-  app.enableCors();
-  
-  app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  aplicativo.enableShutdownHooks();
+  aplicativo.enableCors();
 
-  const config = new DocumentBuilder()
+  aplicativo.setGlobalPrefix('api');
+  aplicativo.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  const configuracaoSwagger = new DocumentBuilder()
     .setTitle('Mini Kanban API')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  const documentoSwagger = SwaggerModule.createDocument(aplicativo, configuracaoSwagger);
+  SwaggerModule.setup('api/docs', aplicativo, documentoSwagger);
 
-  // Escuta em 0.0.0.0 para ser acessível pelo Nginx no Docker
-  await app.listen(3000, '0.0.0.0');
+  await aplicativo.listen(3000, '0.0.0.0');
 }
 
-bootstrap();
+iniciarAplicacao();

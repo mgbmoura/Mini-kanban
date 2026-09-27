@@ -1,0 +1,19 @@
+{
+  "name": "mini-kanban-monorepo",
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "build:web": "npm run build --workspace=web",
+    "build:api": "npm run build --workspace=api",
+    "build": "npm run build:web && npm run build:api",
+    "test:web": "npm run test --workspace=web",
+    "test:api": "npm run test --workspace=api",
+    "test": "npm run test:api && npm run test:web",
+    "dev:web": "npm run dev --workspace=web",
+    "dev:api": "npm run start:dev --workspace=api",
+    "start": "node api/dist/main"
+  }
+}

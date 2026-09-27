@@ -1,19 +1,14 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vitest/config'
-import path from 'path'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000', // O destino do seu backend
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        // A LINHA DO REWRITE FOI APAGADA AQUI! Agora o Vite é um espelho.
       },
     },
   },
@@ -22,10 +17,5 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
   },
-  resolve: {
-    alias: {
-      '@': path.resolve(new URL(import.meta.url).pathname, './src'),
-    },
-  },
   assetsInclude: ['**/*.svg', '**/*.csv'],
-})
+});
