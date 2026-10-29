@@ -1,46 +1,63 @@
 # Mini Kanban
 
-Aplicação full stack para gerenciamento pessoal de tarefas em um quadro Kanban. Cada usuário possui sua própria conta, tarefas e comentários, com autenticação por JWT e persistência em PostgreSQL.
+[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)]()
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)]()
+[![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?logo=nestjs&logoColor=white)]()
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)]()
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)]()
+
+Aplicação full stack para gerenciamento pessoal de tarefas em um quadro Kanban. O projeto permite que cada usuário tenha sua própria conta, tarefas, comentários e preferências, com autenticação JWT e persistência em banco de dados.
+
+O sistema foi pensado para ser simples, visualmente intuitivo e funcional, com foco no gerenciamento diário de atividades e organização do trabalho.
+
+![Preview do projeto](https://via.placeholder.com/1200x700.png?text=Mini+Kanban+Preview)
 
 ## Funcionalidades
 
-- cadastro, login, logout e redefinição de senha;
-- quadro com as colunas A Fazer, Em Andamento e Concluído;
-- criação, edição, movimentação e exclusão de tarefas;
-- prioridade, etiquetas, imagem por URL e três estilos visuais de cartão;
-- comentários por tarefa;
-- edição de perfil e tema claro/escuro;
-- isolamento das tarefas e comentários por usuário;
-- documentação da API com Swagger.
+- Cadastro, login e logout de usuários
+- Recuperação de senha e redefinição por e-mail
+- Quadro Kanban com colunas:
+  - A Fazer
+  - Em Andamento
+  - Concluído
+- Criação, edição, exclusão e movimentação de tarefas
+- Prioridade por tarefa
+- Etiquetas / labels
+- Upload de imagem por URL
+- Três estilos visuais de cartão
+- Comentários por tarefa
+- Edição de perfil
+- Tema claro e escuro
+- Isolamento de dados por usuário
+- Documentação da API com Swagger
+- Execução completa com Docker Compose
 
-## Tecnologias principais
+## Stack tecnológica
 
 ### Frontend
-
-- React 18;
-- TypeScript;
-- Vite;
-- Tailwind CSS;
-- React Router;
-- Axios;
-- `@hello-pangea/dnd` para arrastar e soltar.
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Axios
+- @hello-pangea/dnd
 
 ### Backend
-
-- NestJS;
-- TypeScript;
-- Prisma ORM;
-- PostgreSQL;
-- Passport + JWT;
-- bcryptjs;
-- Swagger.
+- NestJS
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+- Passport + JWT
+- bcryptjs
+- Swagger
 
 ### Infraestrutura
+- Docker
+- Docker Compose
 
-- Docker;
-- Docker Compose.
-
-## Estrutura
+## Estrutura do projeto
 
 ```text
 mini-kanban/
@@ -64,45 +81,9 @@ mini-kanban/
 │       ├── services/
 │       ├── styles/
 │       └── types/
-└── docker-compose.yml
-```
-
-No frontend, as nomenclaturas do domínio são mantidas em português. Os serviços HTTP fazem a conversão entre os modelos usados pela interface e o contrato da API, preservando campos e rotas existentes.
-
-## Documentação
-
-- [Construindo o Mini Kanban do Zero](docs/CONSTRUINDO_DO_ZERO.md) — guia didático que reconstrói o projeto de forma progressiva, explicando o problema que motivou cada decisão, os principais fluxos, checkpoints de aprendizado e perguntas para entrevista.
-
-## Executando com Docker
-
-1. Copie `.env.example` para `.env` e preencha as variáveis necessárias.
-2. Na raiz do projeto, execute:
-
-```bash
-docker compose up --build
-```
-
-Serviços disponíveis:
-
-- aplicação web: `http://localhost:8080`;
-- API: `http://localhost:3000/api`;
-- Swagger: `http://localhost:3000/api/docs`;
-- PostgreSQL: porta `5432`.
-
-Na inicialização, o container da API executa `prisma migrate deploy` antes de iniciar o NestJS.
-
-## Testes
-
-Backend:
-
-```bash
-cd api
-npm test
-```
-
-Frontend:
-
-```bash
-cd web
-npm test
-```
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── package.json
+├── README.md
+└── ...
