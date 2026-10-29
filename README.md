@@ -11,7 +11,6 @@ Aplicação full stack para gerenciamento pessoal de tarefas em um quadro Kanban
 
 O sistema foi pensado para ser simples, visualmente intuitivo e funcional, com foco no gerenciamento diário de atividades e organização do trabalho.
 
-![Preview do projeto](https://via.placeholder.com/1200x700.png?text=Mini+Kanban+Preview)
 
 ## Funcionalidades
 
